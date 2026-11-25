@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Control de Micros 2026 | Compras · Granja El Volantín</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              crimson: '#9E1B32',
+              crimsonDark: '#7D1427',
+              olive: '#4A6741',
+              oliveLight: '#EEF3EC',
+              cream: '#F8F7F4',
+              ink: '#1C1917'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background-color: #F8F7F4; color: #1C1917; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    @media print {
+      body * { visibility: hidden !important; }
+      #poModal, #poModal * { visibility: visible !important; }
+      #poModal { position: absolute !important; inset: 0 !important; background: #fff !important; padding: 0 !important; }
+      #poModal .no-print { display: none !important; }
+      #poSheet { box-shadow: none !important; border: none !important; max-width: 100% !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24 md:pb-10">
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-brand-crimson text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-sm">
+          GV
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base sm:text-lg text-stone-900 truncate">Control de Micros 2026</h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-oliveLight text-brand-olive">
+              Local · Sin Login
+            </span>
+          </div>
+          <p class="text-xs text-stone-500 truncate">Compras · Granja El Volantín · Base Semana <span id="hdrWeek">47</span></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="btnOpenMovementModal" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95">
+          <span>＋</span>
+          <span class="hidden sm:inline">Registrar movimiento</span>
+          <span class="sm:hidden">Movimiento</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Tabs -->
+    <nav class="hidden md:block border-t border-stone-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <button data-tab="resumen" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap">Resumen</button>
+        <button data-tab="inventario" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap">📋 Conteo Lunes / Inventario</button>
+        <button data-tab="pedido" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap">📄 Pedidos y Orden de Compra</button>
+        <button data-tab="produccion" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap">🏭 Producción y Dietas</button>
+        <button data-tab="historial" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap">📅 Calendario y Movimientos</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 space-y-5">
+
+    <!-- VIEW: RESUMEN -->
+    <section id="view-resumen" class="view-section space-y-5">
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-crimson">
+            <span class="w-2 h-2 rounded-full bg-brand-olive"></span>
+            DIETAS VIGENTES 01/07/2026 · PRODUCCIÓN SEMANA <span id="sumWeekLabel">47</span> (<span id="sumTonsTotal">266.5</span> t)
+          </span>
+          <h2 class="text-lg sm:text-xl font-bold text-stone-900 mt-1">Resumen operativo por proveedor</h2>
+          <p class="text-xs sm:text-sm text-stone-500 mt-0.5" id="lastCountBanner">Sin conteo de lunes guardado aún. Captura tus existencias en bodega para calcular cada orden de compra.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+          <button onclick="switchTab('inventario')" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs sm:text-sm font-semibold transition active:scale-95">
+            📋 Iniciar Conteo Lunes
+          </button>
+          <button onclick="openOrderForSupplier('PROVIMI')" class="px-4 py-2.5 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white text-xs sm:text-sm font-semibold transition active:scale-95">
+            🐷 Pedido PROVIMI
+          </button>
+          <button onclick="openOrderForSupplier('ADM')" class="px-4 py-2.5 rounded-xl bg-brand-oliveLight hover:bg-green-100 text-brand-olive text-xs sm:text-sm font-semibold transition active:scale-95">
+            🐔🐑 Pedido ADM
+          </button>
+        </div>
+      </div>
+
+      <!-- Global KPIs -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
+          <span class="text-xs font-medium text-stone-500">Existencia total</span>
+          <div class="text-xl sm:text-2xl font-extrabold text-stone-900 mt-1" id="kpiTotalStock">0.0 kg</div>
+          <div class="text-[11px] text-stone-500 mt-1" id="kpiTotalBags">0.0 sacos registrados</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
+          <span class="text-xs font-medium text-stone-500">Requerimiento semanal</span>
+          <div class="text-xl sm:text-2xl font-extrabold text-stone-900 mt-1" id="kpiWeeklyReq">0.0 kg</div>
+          <div class="text-[11px] text-stone-500 mt-1" id="kpiBasisLabel">Fórmulas Semana 47</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
+          <span class="text-xs font-medium text-stone-500">Por comprar (<span id="kpiTargetWeeks">1.5</span> sem)</span>
+          <div class="text-xl sm:text-2xl font-extrabold text-brand-crimson mt-1" id="kpiToBuy">0.0 kg</div>
+          <div class="text-[11px] text-stone-500 mt-1" id="kpiToBuyBags">0 sacos sugeridos</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
+          <span class="text-xs font-medium text-stone-500">Alertas críticas (&lt; 1 sem)</span>
+          <div class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-1" id="kpiCriticalCount">0</div>
+          <div class="text-[11px] text-stone-500 mt-1">Productos con cobertura baja</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4" id="areaSummaryGrid"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-stone-900">Cobertura en semanas (productos activos)</h3>
+              <p class="text-xs text-stone-500">Existencia actual ÷ consumo semanal (meta: <span id="chartTargetLabel">1.5</span> sem)</p>
+            </div>
+          </div>
+          <div class="relative h-72">
+            <canvas id="coverageChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-sm sm:text-base text-stone-900">Prioridades de compra</h3>
+            <button onclick="loadDemoStock()" class="text-xs font-semibold text-brand-crimson hover:underline">Cargar ejemplo</button>
+          </div>
+          <div id="criticalList" class="space-y-2.5 overflow-y-auto max-h-72 pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: INVENTARIO, CONTEO Y ESTADÍSTICO DE CONSUMO -->
+    <section id="view-inventario" class="view-section hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm space-y-3">
+        <!-- Sub-tabs: Ver Inventario | Hacer Conteo | Estadístico Consumo -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+          <div class="flex flex-wrap gap-1.5" id="invSubTabs">
+            <button data-sub="ver" onclick="setInvSubView('ver')" class="inv-sub-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition">📊 Ver Inventario (Lunes vs Hoy)</button>
+            <button data-sub="conteo" onclick="setInvSubView('conteo')" class="inv-sub-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition">📝 Hacer Conteo en Bodega</button>
+            <button data-sub="estadistico" onclick="setInvSubView('estadistico')" class="inv-sub-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition">📈 Consumo Semanal (Editable)</button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="pushToCloud()" class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm transition active:scale-95" title="Subir existencias a Google Sheets">
+              ☁️ Subir a Sheets
+            </button>
+            <button onclick="pullFromCloud()" class="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold transition active:scale-95" title="Bajar existencias desde Google Sheets">
+              ⬇ Bajar de Sheets
+            </button>
+            <button id="btnExportInvCsv" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition">
+              ⬇ Excel/CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+          <input id="invSearch" type="search" placeholder="Buscar micro, código, color o medicamento..." class="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-crimson/30 focus:border-brand-crimson" />
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0" id="invAreaFilters">
+            <button data-area="ALL" class="inv-filter-btn px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">Todos</button>
+            <button data-area="PROVIMI" class="inv-filter-btn px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">🐷 PROVIMI (Cerdos)</button>
+            <button data-area="ADM" class="inv-filter-btn px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">🐔🐑 ADM (Aves + Ovinos)</button>
+            <button data-area="ADITIVOS" class="inv-filter-btn px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">💊 Aditivos / Med.</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW 1: VER INVENTARIO (SOLO CONSULTA + LUNES PASADO VS HOY) -->
+      <div id="invPanelVer" class="space-y-4">
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-stone-900">Comparativo: Inventario Lunes Pasado vs Hoy</h3>
+            <p class="text-xs text-stone-500">Consulta las existencias sin alterar pronósticos ni órdenes de compra. Guarda cortes de referencia cuando lo necesites.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="selectMondaySnapshot" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-xs font-semibold text-stone-700"></select>
+            <button onclick="saveReferenceSnapshot()" class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition">
+              📌 Guardar corte de referencia
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+            <span class="text-[11px] text-stone-500 block">Lunes pasado / Corte ref.</span>
+            <strong class="text-base sm:text-lg text-stone-700" id="verPrevTotalKg">—</strong>
+          </div>
+          <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+            <span class="text-[11px] text-stone-500 block">Inventario al día de hoy</span>
+            <strong class="text-base sm:text-lg text-stone-900" id="verTodayTotalKg">0.0 kg</strong>
+          </div>
+          <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+            <span class="text-[11px] text-stone-500 block">Diferencia (Hoy − Lunes)</span>
+            <strong class="text-base sm:text-lg text-brand-crimson" id="verDiffTotalKg">—</strong>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-stone-200 p-3 sm:p-4 shadow-sm overflow-x-auto">
+          <table class="w-full text-xs border-collapse min-w-[700px]">
+            <thead>
+              <tr class="bg-stone-100 text-stone-600 border-b border-stone-200">
+                <th class="p-2 text-left">Artículo / Color</th>
+                <th class="p-2 text-right">Lunes pasado</th>
+                <th class="p-2 text-right">Hoy (Sacos + Kg)</th>
+                <th class="p-2 text-right">Diferencia</th>
+                <th class="p-2 text-right">Consumo/sem</th>
+                <th class="p-2 text-center">Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="invViewTableBody" class="divide-y divide-stone-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW 2: HACER CONTEO EN BODEGA -->
+      <div id="invPanelConteo" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-stone-900">Captura de Conteo Físico en Bodega</h3>
+            <p class="text-xs text-stone-500">Captura <strong>sacos cerrados + kg sueltos</strong>. Al guardar el conteo se registra la foto del lunes para compararla después.</p>
+          </div>
+          <button id="btnSaveMondayCount" class="px-4 py-2.5 rounded-xl bg-brand-olive hover:bg-green-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95 shrink-0">
+            ✔ Guardar Conteo de Lunes
+          </button>
+        </div>
+        <div id="inventoryGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- SUB-VIEW 3: ESTADÍSTICO DE CONSUMO SEMANAL (EDITABLE) -->
+      <div id="invPanelEstadistico" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm space-y-3">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-brand-crimson">ESTADÍSTICO REAL · SEMANAS 36 A 47</span>
+              <h3 class="font-bold text-sm sm:text-base text-stone-900">Consumo Semanal por Micro (Editable)</h3>
+              <p class="text-xs text-stone-500">El cálculo ahora toma el <strong>promedio real de 12 semanas</strong> en lugar de solo la última producción, y puedes editar cualquier valor en kg/sem.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="applyConsumptionPreset('avg12')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold">Usar Prom. 12 sem</button>
+              <button onclick="applyConsumptionPreset('p80')" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold">Usar Alta demanda (P80)</button>
+              <button onclick="applyConsumptionPreset('max12')" class="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-brand-crimson text-xs font-semibold">Usar Máximo S36–S47</button>
+              <button onclick="applyConsumptionPreset('diets')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold">Usar Fórmulas S47</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse min-w-[720px]">
+              <thead>
+                <tr class="bg-stone-100 text-stone-600 border-b border-stone-200">
+                  <th class="p-2 text-left">Artículo / Proveedor</th>
+                  <th class="p-2 text-right">Sem 47</th>
+                  <th class="p-2 text-right">Prom. 12 sem</th>
+                  <th class="p-2 text-right">Mín – Máx</th>
+                  <th class="p-2 text-right">Alta demanda (P80)</th>
+                  <th class="p-2 text-right">Consumo activo (kg/sem)</th>
+                </tr>
+              </thead>
+              <tbody id="statsTableBody" class="divide-y divide-stone-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: PEDIDOS Y ORDEN DE COMPRA -->
+    <section id="view-pedido" class="view-section hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-stone-900">Pedidos Separados por Proveedor</h2>
+            <p class="text-xs text-stone-500">Prepara primero el pedido de <strong>PROVIMI (Micros + Preiniciadores por granja)</strong> y aparte el de <strong>ADM (Aves + Ovinos)</strong>.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnOpenPO" class="px-4 py-2.5 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95">
+              📄 Generar Orden de Compra
+            </button>
+            <button id="btnCopyWhatsApp" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95">
+              📲 Copiar WhatsApp
+            </button>
+            <button id="btnExportOrderCsv" class="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs sm:text-sm font-semibold transition">
+              ⬇ Excel/CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Supplier Selector Pills -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button data-supplier="PROVIMI" class="sup-order-btn p-3 rounded-xl border text-left transition">
+            <div class="text-xs font-extrabold">🐷 Pedido PROVIMI / Cargill</div>
+            <div class="text-[11px] opacity-80">Micros Cerdos + Preiniciadores (GV1–GV6)</div>
+          </button>
+          <button data-supplier="ADM" class="sup-order-btn p-3 rounded-xl border text-left transition">
+            <div class="text-xs font-extrabold">🐔🐑 Pedido ADM</div>
+            <div class="text-[11px] opacity-80">Aves + Ovinos (pedido aparte)</div>
+          </button>
+          <button data-supplier="ADITIVOS" class="sup-order-btn p-3 rounded-xl border text-left transition">
+            <div class="text-xs font-extrabold">💊 Aditivos / Medicamentos</div>
+            <div class="text-[11px] opacity-80">Desparasitantes, promotores y med.</div>
+          </button>
+        </div>
+
+        <!-- Base de consumo histórico / fórmulas -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-stone-100">
+          <span class="text-xs font-semibold text-stone-600">Base de consumo semanal (Histórico S36–S47 o Fórmulas):</span>
+          <select id="selectConsumptionBasis" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-xs font-bold text-stone-800">
+            <option value="avg12">Promedio real 12 sem (S36–S47 · 289.1 t/sem)</option>
+            <option value="p80">Alta demanda / Percentil 80 (S36–S47)</option>
+            <option value="max12">Pico máximo semanal (S36–S47)</option>
+            <option value="avg4">Promedio últimas 4 sem (S44–S47 · 273.5 t/sem)</option>
+            <option value="diets">Fórmulas Semana 47 (266.5 t)</option>
+            <option value="custom">Consumo personalizado (editable)</option>
+          </select>
+        </div>
+
+        <!-- Order Parameters & Dates -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-stone-100">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Cobertura objetivo (semanas)</label>
+            <div class="flex items-center gap-1.5">
+              <button data-weeks="1" class="wk-preset px-2.5 py-2 rounded-lg text-xs font-semibold border transition">1.0</button>
+              <button data-weeks="1.5" class="wk-preset px-2.5 py-2 rounded-lg text-xs font-semibold border transition">1.5</button>
+              <button data-weeks="2" class="wk-preset px-2.5 py-2 rounded-lg text-xs font-semibold border transition">2.0</button>
+              <input id="inputTargetWeeks" type="number" step="0.1" min="0.5" max="12" class="w-16 px-2 py-2 rounded-lg border border-stone-200 text-xs font-bold text-center" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Fecha de pedido (Sem <span id="ordSemStart">47</span>)</label>
+            <input id="inputOrderDate" type="date" class="w-full px-3 py-2 rounded-lg border border-stone-200 text-xs font-semibold bg-white" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Posible llegada +7 días (Sem <span id="ordSemEnd">48</span>)</label>
+            <input id="inputDeliveryDate" type="date" class="w-full px-3 py-2 rounded-lg border border-stone-200 text-xs font-semibold bg-brand-oliveLight text-brand-olive" />
+          </div>
+
+          <div class="flex flex-col justify-end gap-2">
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
+              <input id="chkRoundBags" type="checkbox" class="w-4 h-4 rounded accent-brand-crimson" />
+              Redondear a sacos completos
+            </label>
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
+              <input id="chkOnlyShortage" type="checkbox" class="w-4 h-4 rounded accent-brand-crimson" />
+              Mostrar solo con faltante (&gt; 0)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREINICIADORES POR GRANJA (Solo visible en PROVIMI) -->
+      <div id="prestartersSection" class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-brand-olive uppercase tracking-wide">Preiniciadores (Sacos de 25 kg por Granja)</h3>
+            <p class="text-xs text-stone-500">Se piden junto con los micros de PROVIMI distribuidos por granja (GV1 a GV6).</p>
+          </div>
+          <div class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-brand-oliveLight text-brand-olive">
+            Total Preiniciadores: <span id="preTotalBags">0.0</span> sacos (<span id="preTotalKg">0.0</span> kg)
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse min-w-[640px]">
+            <thead>
+              <tr class="bg-stone-100 text-stone-600 border-b border-stone-200">
+                <th class="p-2 text-left">Código</th>
+                <th class="p-2 text-left">Ingrediente</th>
+                <th class="p-2 text-center">Pres.</th>
+                <th class="p-2 text-center">GV1</th>
+                <th class="p-2 text-center">GV2</th>
+                <th class="p-2 text-center">GV3</th>
+                <th class="p-2 text-center">GV4</th>
+                <th class="p-2 text-center">GV5</th>
+                <th class="p-2 text-center">GV6</th>
+                <th class="p-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="prestarterTableBody" class="divide-y divide-stone-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order Summary Strip -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <span class="text-[11px] text-stone-500 block">Micros en esta OC</span>
+          <strong class="text-base sm:text-lg text-stone-900" id="ordCountItems">0</strong>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <span class="text-[11px] text-stone-500 block">Total Micros (kg)</span>
+          <strong class="text-base sm:text-lg text-brand-crimson" id="ordTotalKg">0.0 kg</strong>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-3 text-center">
+          <span class="text-[11px] text-stone-500 block">Total Micros (sacos)</span>
+          <strong class="text-base sm:text-lg text-stone-900" id="ordTotalBags">0</strong>
+        </div>
+      </div>
+
+      <div id="orderList" class="space-y-2.5"></div>
+    </section>
+
+    <!-- VIEW: PRODUCCIÓN Y DIETAS -->
+    <section id="view-produccion" class="view-section hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-stone-900">Producción Semanal y Fórmulas</h2>
+          <p class="text-xs text-stone-500">Precargado con <strong>Semana 47 (266.5 t)</strong>. Si ajustas las toneladas de cualquier alimento, el requerimiento de micros se recalcula en automático.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <label class="text-xs font-semibold text-stone-600">Semana:</label>
+          <input id="inputWeekNum" type="number" min="1" max="53" class="w-16 px-2.5 py-2 rounded-xl border border-stone-200 text-sm font-bold text-center" />
+          <button id="btnResetS47" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition">
+            Restaurar S47
+          </button>
+        </div>
+      </div>
+
+      <div id="productionGroups" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- VIEW: CALENDARIO, HISTÓRICO S36-S47, PEDIDOS GUARDADOS Y MOVIMIENTOS -->
+    <section id="view-historial" class="view-section hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-brand-crimson">DATOS REALES DE PLANTA · EXCEL SEMANAS 36 A 47</span>
+            <h2 class="text-lg font-bold text-stone-900">Histórico de Consumo (12 Semanas · 3,469 t alimento)</h2>
+            <p class="text-xs text-stone-500">Consumo semanal real por producto (kg) y toneladas de alimento enviado de Semana 36 a Semana 47.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="selectHistProduct" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-xs font-semibold text-stone-800 max-w-[240px]">
+              <option value="ALL_MICROS">Total Micros + Aditivos (kg)</option>
+              <option value="PROVIMI">Solo PROVIMI (kg)</option>
+              <option value="ADM">Solo ADM (kg)</option>
+              <option value="ADITIVOS">Solo Aditivos / Med. (kg)</option>
+            </select>
+            <button id="btnExportHistCsv" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition">
+              ⬇ Histórico CSV
+            </button>
+          </div>
+        </div>
+        <div class="relative h-64">
+          <canvas id="historyChart"></canvas>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse min-w-[680px]">
+            <thead>
+              <tr class="bg-stone-100 text-stone-600 border-b border-stone-200">
+                <th class="p-2 text-left">Proveedor</th>
+                <th class="p-2 text-left">Producto</th>
+                <th class="p-2 text-right">Sem 47 (kg)</th>
+                <th class="p-2 text-right">Prom. 4 sem</th>
+                <th class="p-2 text-right">Prom. 12 sem</th>
+                <th class="p-2 text-right">Máx. sem</th>
+                <th class="p-2 text-right">Total S36–S47</th>
+              </tr>
+            </thead>
+            <tbody id="histTableBody" class="divide-y divide-stone-100"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-stone-900">Calendario de Inventario y Entregas</h2>
+            <p class="text-xs text-stone-500">Cada lunes: conteo físico en bodega. Tiempo de entrega estimado: 1 semana (+7 días).</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-oliveLight text-brand-olive">Cada Lunes</span>
+        </div>
+        <div id="calendarCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-base text-stone-900">Órdenes de Compra Guardadas</h3>
+          <span class="text-xs text-stone-500">Marca como "Recibido" para sumar al inventario</span>
+        </div>
+        <div id="savedOrdersList" class="space-y-2.5"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-sky-200 p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-sky-700">SINCRONIZACIÓN CELULAR ↔ PC</span>
+            <h3 class="font-bold text-base text-stone-900">☁️ Conexión con Google Sheets</h3>
+            <p class="text-xs text-stone-500">Pega la URL de tu Web App de Google Apps Script para subir existencias desde el celular y bajarlas en la PC con un toque.</p>
+          </div>
+          <span id="cloudSyncStatus" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 shrink-0">Sin conectar</span>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="inputCloudSyncUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 rounded-xl border border-stone-200 text-xs font-mono bg-stone-50" />
+          <button id="btnSaveCloudUrl" class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition">Guardar URL</button>
+          <button id="btnCopyAppsScript" class="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold transition">📋 Copiar código Apps Script</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="pushToCloud()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition">☁️ Subir existencias ahora</button>
+          <button onclick="pullFromCloud()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">⬇ Descargar existencias de Sheets</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h3 class="font-bold text-base text-stone-900">Historial de Movimientos y Respaldo</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnExportJson" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold">⬇ Respaldo JSON</button>
+            <label class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold cursor-pointer">
+              ⬆ Importar JSON
+              <input id="inputImportJson" type="file" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+        <div id="movementsList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-stone-200 grid grid-cols-5 px-1 py-1.5">
+    <button data-tab="resumen" class="mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold">
+      <span class="text-base">📊</span>
+      <span>Resumen</span>
+    </button>
+    <button data-tab="inventario" class="mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold">
+      <span class="text-base">📋</span>
+      <span>Lunes</span>
+    </button>
+    <button data-tab="pedido" class="mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold">
+      <span class="text-base">📄</span>
+      <span>Pedidos</span>
+    </button>
+    <button data-tab="produccion" class="mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold">
+      <span class="text-base">🏭</span>
+      <span>Dietas</span>
+    </button>
+    <button data-tab="historial" class="mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold">
+      <span class="text-base">📅</span>
+      <span>Historial</span>
+    </button>
+  </nav>
+
+  <!-- Modal: Orden de Compra (Formato Oficial El Volantín / Cargill) -->
+  <div id="poModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div id="poSheet" class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden my-4 border border-stone-300">
+      <div class="p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between no-print border-b border-stone-100 pb-2">
+          <span class="text-xs font-bold text-stone-500">Vista previa de Orden de Compra</span>
+          <button id="btnClosePO" class="px-3 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700">Cerrar ✕</button>
+        </div>
+
+        <!-- Tabla Encabezado estilo PDF -->
+        <table class="w-full border-collapse border border-stone-800 text-xs">
+          <tbody>
+            <tr>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50 w-36">Empresa:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-extrabold text-center">GRANJA EL VOLANTÍN</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50 w-24">Especie:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 text-center font-semibold" id="poSpecies">Cerdos</td>
+            </tr>
+            <tr>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50">Fecha del pedido:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 text-center font-bold" id="poDate">—</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50">Semana:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 text-center font-bold" id="poWeekStart">47</td>
+            </tr>
+            <tr>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50">Posible llegada:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 text-center font-bold text-brand-olive" id="poDelivery">—</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 font-bold bg-stone-50">Semana:</td>
+              <td class="border border-stone-800 px-2.5 py-1.5 text-center font-bold" id="poWeekEnd">48</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="border border-stone-800 py-1.5 px-3 text-center text-xs font-bold tracking-wider uppercase" id="poBannerTitle">
+          MICROS Y PREINICIADORES · CERDOS (PROVIMI)
+        </div>
+
+        <!-- Tabla Preiniciadores (solo si hay en PROVIMI) -->
+        <div id="poPrestartersWrap" class="space-y-1.5 hidden">
+          <div class="text-xs font-bold text-brand-olive uppercase">PREINICIADORES</div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-stone-800 text-[11px]">
+              <thead>
+                <tr class="bg-stone-100 text-stone-800">
+                  <th class="border border-stone-800 p-1.5 text-center">Código</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Ingrediente</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Presentación</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV1</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV2</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV3</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV4</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV5</th>
+                  <th class="border border-stone-800 p-1.5 text-center">GV6</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody id="poPrestartersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabla Micros -->
+        <div class="space-y-1.5">
+          <div class="text-xs font-bold text-brand-olive uppercase">MICROS</div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-stone-800 text-xs">
+              <thead>
+                <tr class="bg-stone-100 text-stone-800">
+                  <th class="border border-stone-800 p-1.5 text-center">Código</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Ingrediente</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Presentación</th>
+                  <th class="border border-stone-800 p-1.5 text-center">Pedido</th>
+                  <th class="border border-stone-800 p-1.5 text-center">KG</th>
+                </tr>
+              </thead>
+              <tbody id="poTableBody"></tbody>
+              <tfoot>
+                <tr class="font-extrabold bg-stone-50">
+                  <td class="border border-stone-800 p-1.5 text-right" colspan="3">TOTAL</td>
+                  <td class="border border-stone-800 p-1.5 text-center" id="poTotalBags">0.0 sacos</td>
+                  <td class="border border-stone-800 p-1.5 text-right text-brand-crimson" id="poTotalKg">0.0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OC Actions -->
+      <div class="no-print p-4 sm:px-6 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-end gap-2">
+        <button id="btnPoPrint" class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold">🖨️ Imprimir / Guardar PDF</button>
+        <button id="btnPoCopyWa" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">📲 Copiar WhatsApp</button>
+        <button id="btnPoSave" class="px-4 py-2.5 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white text-xs font-semibold">💾 Guardar Orden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Movimiento -->
+  <div id="movementModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg text-stone-900">Registrar movimiento</h3>
+        <button id="btnCloseMovementModal" class="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center font-bold text-stone-600">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">Producto</label>
+          <select id="movProduct" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm bg-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Tipo</label>
+            <select id="movType" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm bg-white">
+              <option value="entrada">➕ Entrada (Compra)</option>
+              <option value="salida">➖ Salida (Consumo)</option>
+              <option value="ajuste">⚖️ Ajuste directo (kg)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Cantidad (kg)</label>
+            <input id="movQty" type="number" step="0.1" min="0" placeholder="0.0" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm font-bold" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">Nota / Folio (opcional)</label>
+          <input id="movNote" type="text" placeholder="Ej. Remisión Provimi #1234" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm" />
+        </div>
+      </div>
+      <button id="btnSubmitMovement" class="w-full py-3 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white font-semibold text-sm shadow-sm transition">
+        Guardar movimiento
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmación de Recepción de Pedido -->
+  <div id="receiveModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
+      <h3 class="font-bold text-base text-stone-900">¿Marcar orden como recibida?</h3>
+      <p class="text-xs text-stone-600">Se sumarán automáticamente las cantidades de esta orden a tu inventario actual y se registrará la entrada en Movimientos.</p>
+      <div class="flex gap-2 justify-end">
+        <button id="btnCancelReceive" class="px-4 py-2 rounded-xl bg-stone-100 text-stone-700 text-xs font-semibold">Cancelar</button>
+        <button id="btnConfirmReceive" class="px-4 py-2 rounded-xl bg-brand-olive text-white text-xs font-semibold">Sí, sumar al inventario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar Artículo (Código, Nombre, Señalética de Color) -->
+  <div id="editProductModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-stone-900">Editar artículo</h3>
+        <button id="btnCloseEditProduct" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">Código</label>
+          <input id="editProdCode" type="text" placeholder="Ej. 130074667" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 font-mono text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">Nombre del artículo</label>
+          <input id="editProdName" type="text" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 font-semibold text-sm" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Etapa / Señalética</label>
+            <input id="editProdStage" type="text" placeholder="Ej. Crecimiento 1 - Amarillo" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Color</label>
+            <select id="editProdColor" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-semibold">
+              <option value="">Sin color</option>
+              <option value="amarillo">🟡 Amarillo</option>
+              <option value="verde">🟢 Verde</option>
+              <option value="azul">🔵 Azul</option>
+              <option value="cafe">🟤 Café</option>
+              <option value="rojo">🔴 Rojo</option>
+              <option value="naranja">🟠 Naranja</option>
+              <option value="morado">🟣 Morado</option>
+              <option value="gris">⚪ Gris / Neutro</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">Presentación (kg por saco)</label>
+          <input id="editProdBagKg" type="number" step="0.5" min="0.5" class="w-full px-3 py-2.5 rounded-xl border border-stone-200 font-semibold text-sm" />
+        </div>
+        <button id="btnSaveEditProduct" class="w-full py-2.5 rounded-xl bg-brand-crimson hover:bg-brand-crimsonDark text-white font-semibold transition">
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-16 right-4 z-50 hidden bg-stone-900 text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg"></div>
+
+  <script>
+    // =========================================================================
+    // DATA BASELINE: SEMANA 47 + CÓDIGOS Y PRESENTACIONES REALES CARGILL/PROVIMI
+    // =========================================================================
+    const STORAGE_KEY = 'gev_control_micros_2026_v3';
+
+    const DEFAULT_PRESTARTERS = [
+      { id: 'pre_fase0', code: '107545095', name: 'FASE 0', bagKg: 25.0, gv1: 0, gv2: 0, gv3: 0, gv4: 0, gv5: 0, gv6: 0 },
+      { id: 'pre_fase1', code: '1077548865', name: 'FASE 1', bagKg: 25.0, gv1: 0, gv2: 0, gv3: 0, gv4: 0, gv5: 0, gv6: 0 },
+      { id: 'pre_fase2', code: '107545955', name: 'FASE 2', bagKg: 25.0, gv1: 0, gv2: 0, gv3: 0, gv4: 0, gv5: 0, gv6: 0 },
+      { id: 'pre_fase3', code: '107545149', name: 'FASE 3', bagKg: 25.0, gv1: 0, gv2: 0, gv3: 0, gv4: 0, gv5: 0, gv6: 0 },
+      { id: 'pre_semental', code: '—', name: 'SEMENTAL ACTIVO', bagKg: 25.0, gv1: 0, gv2: 0, gv3: 0, gv4: 0, gv5: 0, gv6: 0 }
+    ];
+
+    // HISTÓRICO REAL DE CONSUMO (CONCENTRADO INSUMOS · SEMANAS 36 A 47)
+    const HISTORICAL_WEEKS = ['S36', 'S37', 'S38', 'S39', 'S40', 'S41', 'S42', 'S43', 'S44', 'S45', 'S46', 'S47'];
+    const HISTORICAL_FEED_TONS = [296.0, 275.0, 320.0, 314.0, 302.0, 290.0, 277.0, 301.0, 284.0, 307.5, 236.0, 266.5];
+    const HISTORICAL_CONSUMPTION = {"cc_performa_nt3": [500.0, 200.0, 500.0, 400.0, 200.0, 700.0, 300.0, 300.0, 600.0, 300.0, 300.0, 150.0], "bx_maxima_nt4": [612.0, 612.0, 680.0, 884.0, 748.0, 612.0, 612.0, 680.0, 612.0, 918.0, 476.0, 408.0], "maxima_nt_pro_25_40": [896.0, 736.0, 1024.0, 672.0, 544.0, 704.0, 896.0, 704.0, 736.0, 896.0, 608.0, 672.0], "maxima_nt_40_60": [616.0, 728.0, 588.0, 868.0, 1232.0, 952.0, 896.0, 840.0, 476.0, 672.0, 728.0, 924.0], "maxima_nt_60_95": [1064.0, 700.0, 924.0, 644.0, 532.0, 616.0, 756.0, 1288.0, 420.0, 672.0, 448.0, 476.0], "maxima_nt_profit_fin": [1012.0, 1100.0, 1364.0, 1122.0, 1100.0, 1166.0, 814.0, 880.0, 1188.0, 1672.0, 726.0, 924.0], "maxima_nt_lactancia": [294.0, 336.0, 252.0, 252.0, 294.0, 294.0, 378.0, 252.0, 294.0, 336.0, 378.0, 126.0], "performa_nt_gestacion": [560.0, 595.0, 630.0, 665.0, 595.0, 525.0, 560.0, 490.0, 525.0, 420.0, 560.0, 525.0], "maxima_nt_reemp_30_70": [74.0, 74.0, 0.0, 74.0, 0.0, 74.0, 148.0, 0.0, 0.0, 0.0, 0.0, 0.0], "maxima_nt_reemp_70_100": [105.0, 105.0, 35.0, 35.0, 105.0, 0.0, 35.0, 70.0, 0.0, 35.0, 0.0, 70.0], "maxima_nt_reemp_100_serv": [175.0, 140.0, 175.0, 140.0, 105.0, 140.0, 105.0, 105.0, 70.0, 105.0, 175.0, 140.0], "micro_ovino_inic": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "micro_ovino_engorda": [120.0, 90.0, 90.0, 120.0, 90.0, 60.0, 90.0, 150.0, 60.0, 90.0, 0.0, 60.0], "micro_ovino_reprod": [200.0, 200.0, 200.0, 200.0, 150.0, 100.0, 150.0, 300.0, 150.0, 150.0, 0.0, 100.0], "avantage_inicio_polla": [0.0, 0.0, 0.0, 0.0, 175.0, 350.0, 175.0, 250.0, 500.0, 87.5, 75.0, 175.0], "micro_crianza_polla": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 125.0, 525.0], "avantage_booster": [950.0, 950.0, 1050.0, 1150.0, 1150.0, 1150.0, 500.0, 450.0, 450.0, 500.0, 625.0, 500.0], "avantage_fase2": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 600.0, 600.0, 600.0, 525.0, 350.0], "avantage_fase3": [1050.0, 950.0, 1100.0, 1100.0, 875.0, 450.0, 0.0, 550.0, 450.0, 450.0, 450.0, 450.0], "avantage_pelecha2": [450.0, 350.0, 600.0, 700.0, 600.0, 600.0, 1650.0, 750.0, 1050.0, 750.0, 575.0, 800.0], "detoxa_plus": [185.0, 176.0, 198.0, 184.0, 180.0, 180.0, 175.0, 182.0, 151.0, 203.0, 138.0, 147.0], "detoxa_performance": [98.0, 90.0, 110.0, 118.0, 112.0, 102.0, 93.0, 104.0, 122.0, 95.5, 95.0, 112.0], "nutrimulina_ctc": [208.0, 203.0, 166.0, 176.0, 235.0, 164.0, 198.0, 158.0, 142.0, 216.0, 186.0, 186.0], "promote_d": [12.0, 12.0, 13.0, 21.0, 16.0, 11.0, 12.0, 13.0, 11.0, 21.0, 7.0, 0.0], "herbanoplex": [80.0, 74.0, 86.0, 75.0, 80.0, 78.0, 87.0, 98.0, 55.0, 76.0, 61.0, 71.0], "progen_22": [0.0, 8.0, 6.0, 6.0, 7.0, 7.0, 9.0, 6.0, 7.0, 8.0, 9.0, 3.0], "tm40": [0.0, 0.0, 30.8, 32.8, 34.0, 30.0, 32.4, 29.2, 25.6, 32.8, 24.0, 27.0], "tylo_pharma_220": [6.3, 5.6, 30.5, 23.0, 17.9, 20.4, 26.3, 38.9, 13.4, 21.9, 16.3, 16.4], "ractopamina_2": [23.0, 25.0, 31.0, 25.5, 25.0, 26.5, 18.5, 20.0, 27.0, 38.0, 16.5, 21.0], "covermax": [0.0, 100.0, 20.0, 102.0, 100.0, 86.0, 74.0, 80.0, 108.0, 152.0, 66.0, 34.0], "vitamina_c_35": [13.3, 13.3, 14.7, 16.1, 16.1, 16.1, 7.0, 14.7, 14.7, 15.4, 14.35, 11.9], "yes_protegg": [54.0, 42.0, 66.0, 78.0, 66.0, 48.0, 132.0, 54.0, 66.0, 42.0, 34.0, 60.0], "florte": [7.6, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "mecadox": [1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "oxiplus_200": [176.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "neumoenter": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 224.0]};
+
+    const DEFAULT_DIETS = [
+      // Cerdos Engorda
+      { id: 'c_fase3', area: 'Cerdos Engorda', name: 'Fase 3 (7-15 kg)', tons: 1.5, doses: { 'cc_performa_nt3': 100, 'nutrimulina_ctc': 2, 'tm40': 0.4 } },
+      { id: 'c_iniciador', area: 'Cerdos Engorda', name: 'Iniciador 12-25 kg', tons: 12.0, doses: { 'bx_maxima_nt4': 34, 'detoxa_plus': 1, 'nutrimulina_ctc': 2, 'tm40': 0.4 } },
+      { id: 'c_crec1', area: 'Cerdos Engorda', name: 'Crecimiento 1 - Amarillo', tons: 21.0, doses: { 'maxima_nt_pro_25_40': 32, 'detoxa_plus': 1, 'nutrimulina_ctc': 2, 'herbanoplex': 1, 'tm40': 0.4 } },
+      { id: 'c_crec2', area: 'Cerdos Engorda', name: 'Crecimiento 2 - Verde', tons: 33.0, doses: { 'maxima_nt_40_60': 28, 'detoxa_plus': 1, 'nutrimulina_ctc': 2, 'herbanoplex': 1, 'tm40': 0.4 } },
+      { id: 'c_desarrollo', area: 'Cerdos Engorda', name: 'Desarrollo - Azul', tons: 17.0, doses: { 'maxima_nt_60_95': 28, 'detoxa_plus': 1, 'herbanoplex': 1, 'tylo_pharma_220': 0.8 } },
+      { id: 'c_finalizador', area: 'Cerdos Engorda', name: 'Finalizador - Café', tons: 42.0, doses: { 'maxima_nt_profit_fin': 22, 'detoxa_plus': 1, 'ractopamina_2': 0.5, 'covermax': 0.81 } },
+
+      // Sitios 1
+      { id: 's_gestacion', area: 'Sitios 1', name: 'Gestación Cerdos', tons: 15.0, doses: { 'performa_nt_gestacion': 35, 'detoxa_plus': 1, 'nutrimulina_ctc': 3 } },
+      { id: 's_lactancia', area: 'Sitios 1', name: 'Lactancia Cerdos', tons: 3.0, doses: { 'maxima_nt_lactancia': 42, 'detoxa_plus': 1, 'nutrimulina_ctc': 2, 'progen_22': 1 } },
+      { id: 's_iniciador', area: 'Sitios 1', name: 'Iniciador (Sitios 1)', tons: 0.0, doses: { 'bx_maxima_nt4': 34, 'detoxa_plus': 1 } },
+      { id: 's_crec_reemp', area: 'Sitios 1', name: 'Crecimiento Reemplazo', tons: 0.0, doses: { 'maxima_nt_reemp_30_70': 37, 'detoxa_plus': 1, 'tylo_pharma_220': 0.5 } },
+      { id: 's_reemp1', area: 'Sitios 1', name: 'Reemplazo 1', tons: 2.0, doses: { 'maxima_nt_reemp_70_100': 35 } },
+      { id: 's_reemp2', area: 'Sitios 1', name: 'Reemplazo 2', tons: 4.0, doses: { 'maxima_nt_reemp_100_serv': 35, 'detoxa_plus': 1, 'tylo_pharma_220': 0.7 } },
+
+      // Ovinos
+      { id: 'o_gestacion', area: 'Ovinos', name: 'Gestación Borregos', tons: 1.0, doses: { 'micro_ovino_reprod': 50 } },
+      { id: 'o_lactancia', area: 'Ovinos', name: 'Lactancia Borregos', tons: 1.0, doses: { 'micro_ovino_reprod': 50 } },
+      { id: 'o_iniciador', area: 'Ovinos', name: 'Iniciador (Creep Feeding)', tons: 0.0, doses: { 'micro_ovino_inic': 34 } },
+      { id: 'o_crecimiento', area: 'Ovinos', name: 'Crecimiento Ovinos', tons: 2.0, doses: { 'micro_ovino_engorda': 30 } },
+      { id: 'o_engorda', area: 'Ovinos', name: 'Engorda Ovinos', tons: 0.0, doses: { 'micro_ovino_engorda': 30 } },
+
+      // Avícola
+      { id: 'a_iniciador', area: 'Avícola', name: 'Iniciador Pollita', tons: 7.0, doses: { 'avantage_inicio_polla': 25, 'detoxa_performance': 1, 'neumoenter': 2 } },
+      { id: 'a_crecimiento', area: 'Avícola', name: 'Crecimiento Pollita', tons: 21.0, doses: { 'micro_crianza_polla': 25, 'detoxa_performance': 1, 'neumoenter': 2 } },
+      { id: 'a_booster', area: 'Avícola', name: 'Booster Postura', tons: 20.0, doses: { 'avantage_booster': 25, 'detoxa_performance': 1, 'vitamina_c_35': 0.35, 'neumoenter': 2 } },
+      { id: 'a_fase1', area: 'Avícola', name: 'Fase 1 Postura', tons: 0.0, doses: { 'avantage_booster': 25, 'detoxa_performance': 1, 'vitamina_c_35': 0.35 } },
+      { id: 'a_fase2', area: 'Avícola', name: 'Fase 2 Postura', tons: 14.0, doses: { 'avantage_fase2': 25, 'detoxa_performance': 1, 'vitamina_c_35': 0.35, 'yes_protegg': 1, 'neumoenter': 2 } },
+      { id: 'a_fase3', area: 'Avícola', name: 'Fase 3 Postura', tons: 0.0, doses: { 'avantage_fase2': 25, 'detoxa_performance': 1 } },
+      { id: 'a_fase4', area: 'Avícola', name: 'Fase 4 Postura', tons: 0.0, doses: { 'avantage_fase3': 25, 'detoxa_performance': 1 } },
+      { id: 'a_fase5', area: 'Avícola', name: 'Fase 5 Postura', tons: 18.0, doses: { 'avantage_fase3': 25, 'detoxa_performance': 1, 'neumoenter': 2 } },
+      { id: 'a_fase6', area: 'Avícola', name: 'Fase 6 Postura', tons: 0.0, doses: { 'avantage_fase3': 25, 'detoxa_performance': 1, 'yes_protegg': 1 } },
+      { id: 'a_pelecha1', area: 'Avícola', name: 'Pelecha 1', tons: 18.0, doses: { 'avantage_pelecha2': 25, 'detoxa_performance': 1, 'yes_protegg': 1, 'neumoenter': 2 } },
+      { id: 'a_pelecha2', area: 'Avícola', name: 'Pelecha 2', tons: 14.0, doses: { 'avantage_pelecha2': 25, 'detoxa_performance': 1, 'yes_protegg': 2, 'neumoenter': 2 } },
+      { id: 'a_pelecha3', area: 'Avícola', name: 'Pelecha 3', tons: 0.0, doses: { 'avantage_pelecha2': 25, 'detoxa_performance': 1, 'yes_protegg': 1 } },
+      { id: 'a_pelecha4', area: 'Avícola', name: 'Pelecha 4', tons: 0.0, doses: { 'avantage_pelecha2': 25, 'detoxa_performance': 1, 'yes_protegg': 2 } }
+    ];
+
+    const DEFAULT_PRODUCTS = [
+      // PROVIMI / CARGILL (Códigos y presentaciones exactas de OC PDF)
+      { id: 'maxima_nt_pro_25_40', code: '130074667', name: 'MAXIMA NT PROFIT 25-40 BX', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Crecimiento 1 - Amarillo', colorTag: 'amarillo', bagKg: 16.0, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_40_60', code: '130074677', name: 'MAXIMA NT PROFIT 40-60 BX', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Crecimiento 2 - Verde', colorTag: 'verde', bagKg: 14.0, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_60_95', code: '130074687', name: 'MAXIMA NT PROFIT 60-95 BX', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Desarrollo - Azul', colorTag: 'azul', bagKg: 14.0, bags: 0, looseKg: 0 },
+      { id: 'cc_performa_nt3', code: '107589546', name: 'CC PERFORMA NT 3', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Fase 3', colorTag: 'gris', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_profit_fin', code: '130145524', name: 'MAXIMA NT PROFIT FINALIZADOR BX', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Finalizador - Café', colorTag: 'cafe', bagKg: 22.0, bags: 0, looseKg: 0 },
+      { id: 'covermax', code: '107546585', name: 'CONVERMAX (Covermax)', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Finalizador - Café', colorTag: 'cafe', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'performa_nt_gestacion', code: '107545725', name: 'PERFORMA LIVELLE GESTACION', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Gestación', colorTag: 'gris', bagKg: 17.5, bags: 0, looseKg: 0 },
+      { id: 'bx_maxima_nt4', code: '130063189', name: 'BX MAXIMA NT 4', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Iniciador 12-25 kg', colorTag: 'gris', bagKg: 17.0, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_lactancia', code: '107543962', name: 'MAXIMA LIVELLE LACTANCIA', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Lactancia', colorTag: 'gris', bagKg: 21.0, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_reemp_100_serv', code: '107545723', name: 'MAXIMA LIVELLE CRE REEMP 100-SERVICIO', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Reemplazo 2 (100-Serv)', colorTag: 'gris', bagKg: 17.5, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_reemp_30_70', code: '130015094', name: 'MAXIMA LIVELLE CRE REEMP 30-70', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Crecimiento reemplazo', colorTag: 'gris', bagKg: 18.5, bags: 0, looseKg: 0 },
+      { id: 'maxima_nt_reemp_70_100', code: '—', name: 'Maxima NT Reemp 70-100 BX', area: 'Cerdos', supplierGroup: 'PROVIMI', supplier: 'PROVIMI', stageLabel: 'Reemplazo 1 (70-100)', colorTag: 'gris', bagKg: 17.5, bags: 0, looseKg: 0 },
+
+      // ADM: Aves + Ovinos únicamente
+      { id: 'avantage_inicio_polla', code: '—', name: 'Avantage Inicio Polla D25', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'micro_crianza_polla', code: '—', name: 'Micro Crianza Polla Postura', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'avantage_booster', code: '—', name: 'Avantage Booster Postura', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'avantage_fase2', code: '—', name: 'Avantage Fase 2 Postura', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'avantage_fase3', code: '—', name: 'Avantage Fase 3 Postura', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'avantage_pelecha2', code: '—', name: 'Avantage Pelecha 2 D25', area: 'Aves', supplierGroup: 'ADM', supplier: 'ADM · Aves', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'micro_ovino_inic', code: '—', name: 'Micro Ovino Iniciador ADM', area: 'Ovinos', supplierGroup: 'ADM', supplier: 'ADM · Ovinos', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'micro_ovino_engorda', code: '—', name: 'Micro Ovino Engorda ADM', area: 'Ovinos', supplierGroup: 'ADM', supplier: 'ADM · Ovinos', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'micro_ovino_reprod', code: '—', name: 'Micro Ovino Reproductora Wisium', area: 'Ovinos', supplierGroup: 'ADM', supplier: 'ADM · Ovinos', bagKg: 25.0, bags: 0, looseKg: 0 },
+
+      // ADITIVOS / MEDICAMENTOS
+      { id: 'detoxa_plus', code: '—', name: 'Detoxa Plus', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'detoxa_performance', code: '—', name: 'Detoxa Performance', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Aves)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'nutrimulina_ctc', code: '—', name: 'Nutrimulina CTC', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'herbanoplex', code: '—', name: 'Herbanoplex', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'progen_22', code: '—', name: 'Progen 22', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'tm40', code: '—', name: 'TM-40', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'tylo_pharma_220', code: '—', name: 'Tylo Pharma 220', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'ractopamina_2', code: '—', name: 'Ractopamina 2%', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'vitamina_c_35', code: '—', name: 'Vitamina C 35%', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Aves)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'yes_protegg', code: '—', name: 'Yes Protegg', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Aves)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'neumoenter', code: '—', name: 'Neumoenter', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Aves)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'promote_d', code: '—', name: 'Promote D', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos (Cerdos)', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'florte', code: '—', name: 'Florte', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'mecadox', code: '—', name: 'Mecadox', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos', bagKg: 25.0, bags: 0, looseKg: 0 },
+      { id: 'oxiplus_200', code: '—', name: 'Oxiplus 200', area: 'Aditivos', supplierGroup: 'ADITIVOS', supplier: 'Aditivos', bagKg: 25.0, bags: 0, looseKg: 0 }
+    ];
+
+    function todayISO() { return new Date().toISOString().split('T')[0]; }
+    function addDaysISO(iso, days) {
+      const d = new Date(iso + 'T12:00:00');
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    }
+
+    // =========================================================================
+    // STATE MANAGEMENT
+    // =========================================================================
+    let state = {
+      activeTab: 'resumen',
+      weekNumber: 47,
+      targetWeeks: 1.5,
+      roundBags: true,
+      onlyShortage: true,
+      invAreaFilter: 'ALL',
+      invSearch: '',
+      orderSupplier: 'PROVIMI',
+      orderDate: todayISO(),
+      deliveryDate: addDaysISO(todayISO(), 7),
+      lastMondayCount: null,
+      products: JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)),
+      prestarters: JSON.parse(JSON.stringify(DEFAULT_PRESTARTERS)),
+      diets: JSON.parse(JSON.stringify(DEFAULT_DIETS)),
+      consumptionBasis: 'avg12',
+      invSubView: 'ver',
+      customWeeklyKg: {},
+      mondaySnapshots: [],
+      selectedSnapshotId: '',
+      histFilter: 'ALL',
+      cloudSyncUrl: '',
+      lastSyncAt: '',
+      orderOverrides: {},
+      savedOrders: [],
+      movements: []
+    };
+
+    let coverageChartInstance = null;
+    let historyChartInstance = null;
+    let pendingReceiveOrderId = null;
+    let editingProductId = null;
+
+    const COLOR_TAG_STYLES = {
+      amarillo: { wrap: 'bg-yellow-100 text-yellow-900 border-yellow-300', dot: 'bg-yellow-400' },
+      verde: { wrap: 'bg-emerald-100 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
+      azul: { wrap: 'bg-sky-100 text-sky-900 border-sky-300', dot: 'bg-sky-500' },
+      cafe: { wrap: 'bg-amber-900/15 text-amber-950 border-amber-800/30', dot: 'bg-amber-800' },
+      rojo: { wrap: 'bg-red-100 text-red-900 border-red-300', dot: 'bg-red-500' },
+      naranja: { wrap: 'bg-orange-100 text-orange-900 border-orange-300', dot: 'bg-orange-500' },
+      morado: { wrap: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-500' },
+      gris: { wrap: 'bg-stone-100 text-stone-700 border-stone-200', dot: 'bg-stone-400' }
+    };
+
+    function renderStageBadge(p) {
+      if (!p.stageLabel && !p.colorTag) return '';
+      const st = COLOR_TAG_STYLES[p.colorTag] || COLOR_TAG_STYLES.gris;
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${st.wrap}">
+        <span class="w-2 h-2 rounded-full ${st.dot} shrink-0"></span>
+        <span>${p.stageLabel || p.colorTag}</span>
+      </span>`;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = { ...state, ...parsed };
+          // Sincronizar señalética de color/etapa en productos guardados
+          const defaultProdMap = Object.fromEntries(DEFAULT_PRODUCTS.map(dp => [dp.id, dp]));
+          state.products = (state.products || []).map(p => {
+            const def = defaultProdMap[p.id];
+            if (!def) return p;
+            return {
+              ...p,
+              stageLabel: p.stageLabel !== undefined ? p.stageLabel : (def.stageLabel || ''),
+              colorTag: p.colorTag !== undefined ? p.colorTag : (def.colorTag || ''),
+              code: (p.code === '—' && def.code && def.code !== '—') ? def.code : p.code
+            };
+          });
+          // Asegurar que nuevos preiniciadores (ej. SEMENTAL ACTIVO) se agreguen a estados guardados
+          const existingPreIds = new Set((state.prestarters || []).map(p => p.id));
+          DEFAULT_PRESTARTERS.forEach(dp => {
+            if (!existingPreIds.has(dp.id)) {
+              state.prestarters.push(JSON.parse(JSON.stringify(dp)));
+            }
+          });
+        }
+      } catch (e) { /* ignore storage errors */ }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) { /* ignore storage errors */ }
+    }
+
+    // =========================================================================
+    // CALCULATIONS
+    // =========================================================================
+    function getHistStats(prodId) {
+      const arr = HISTORICAL_CONSUMPTION[prodId] || [];
+      if (arr.length === 0) return { avg12: 0, avg4: 0, min12: 0, max12: 0, p80: 0, s47: 0, total12: 0 };
+      const total12 = arr.reduce((a, b) => a + b, 0);
+      const avg12 = total12 / arr.length;
+      const last4 = arr.slice(-4);
+      const avg4 = last4.reduce((a, b) => a + b, 0) / last4.length;
+      const min12 = Math.min(...arr);
+      const max12 = Math.max(...arr);
+      const sorted = [...arr].sort((a, b) => a - b);
+      const p80 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.8))];
+      const s47 = arr[arr.length - 1];
+      return { avg12, avg4, min12, max12, p80, s47, total12 };
+    }
+
+    function getConsumptionBasisLabel() {
+      if (state.consumptionBasis === 'custom') return 'Consumo semanal personalizado (editable)';
+      if (state.consumptionBasis === 'avg12') return 'Promedio real 12 sem (Sem 36–47)';
+      if (state.consumptionBasis === 'p80') return 'Alta demanda / P80 (Sem 36–47)';
+      if (state.consumptionBasis === 'avg4') return 'Promedio últimas 4 sem (Sem 44–47)';
+      if (state.consumptionBasis === 'max12') return 'Máximo semanal (Sem 36–47)';
+      return `Fórmulas Semana ${state.weekNumber}`;
+    }
+
+    function getDietConsumptionMap() {
+      const map = {};
+      state.products.forEach(p => { map[p.id] = 0; });
+      state.diets.forEach(d => {
+        const t = Number(d.tons) || 0;
+        Object.entries(d.doses).forEach(([prodId, kgPerTon]) => {
+          if (map[prodId] !== undefined) {
+            map[prodId] += t * (Number(kgPerTon) || 0);
+          }
+        });
+      });
+      return map;
+    }
+
+    function getWeeklyConsumptionMap() {
+      const map = {};
+      if (state.consumptionBasis === 'custom') {
+        state.products.forEach(p => {
+          const val = state.customWeeklyKg && state.customWeeklyKg[p.id] !== undefined
+            ? Number(state.customWeeklyKg[p.id])
+            : getHistStats(p.id).avg12;
+          map[p.id] = +(Number(val) || 0).toFixed(2);
+        });
+        return map;
+      }
+      if (state.consumptionBasis && state.consumptionBasis !== 'diets') {
+        state.products.forEach(p => {
+          const st = getHistStats(p.id);
+          map[p.id] = +(st[state.consumptionBasis] || 0).toFixed(2);
+        });
+        return map;
+      }
+      return getDietConsumptionMap();
+    }
+
+    function getProductStockKg(p) {
+      return (Number(p.bags) || 0) * (Number(p.bagKg) || 25) + (Number(p.looseKg) || 0);
+    }
+
+    function getOrderCalc(p, weeklyKg) {
+      const stockKg = getProductStockKg(p);
+      const targetMult = Number(state.targetWeeks) || 1;
+      const reqTargetKg = weeklyKg * targetMult;
+      const rawShortageKg = Math.max(0, reqTargetKg - stockKg);
+      const bagKg = Number(p.bagKg) || 25;
+      const bagsNeeded = rawShortageKg > 0
+        ? (state.roundBags ? Math.ceil(rawShortageKg / bagKg) : +(rawShortageKg / bagKg).toFixed(2))
+        : 0;
+      const finalKg = state.orderOverrides[p.id] !== undefined
+        ? Number(state.orderOverrides[p.id])
+        : (state.roundBags ? bagsNeeded * bagKg : +rawShortageKg.toFixed(1));
+      const finalBags = bagKg > 0 ? +(finalKg / bagKg).toFixed(2) : 0;
+      const covWeeks = weeklyKg > 0 ? stockKg / weeklyKg : (stockKg > 0 ? 99 : 0);
+      return { stockKg, weeklyKg, reqTargetKg, rawShortageKg, finalKg, finalBags, covWeeks };
+    }
+
+    function getPrestarterRowTotal(pr) {
+      return (Number(pr.gv1) || 0) + (Number(pr.gv2) || 0) + (Number(pr.gv3) || 0) + (Number(pr.gv4) || 0) + (Number(pr.gv5) || 0) + (Number(pr.gv6) || 0);
+    }
+
+    function fmt(n, dec = 1) {
+      return Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    }
+
+    function fmtDateDMY(iso) {
+      if (!iso) return '—';
+      const [y, m, d] = iso.split('-');
+      return `${Number(d)}/${Number(m)}/${y}`;
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
+    }
+
+    // =========================================================================
+    // NAVIGATION
+    // =========================================================================
+    function switchTab(tab) {
+      state.activeTab = tab;
+      saveState();
+      document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+      const target = document.getElementById('view-' + tab);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.className = `tab-btn px-4 py-3 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
+          active ? 'border-brand-crimson text-brand-crimson' : 'border-transparent text-stone-500 hover:text-stone-900'
+        }`;
+      });
+
+      document.querySelectorAll('.mob-tab-btn').forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.className = `mob-tab-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-semibold transition ${
+          active ? 'text-brand-crimson bg-red-50' : 'text-stone-500'
+        }`;
+      });
+
+      renderCurrentView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openOrderForSupplier(sup) {
+      state.orderSupplier = sup;
+      switchTab('pedido');
+    }
+
+    // =========================================================================
+    // RENDER: RESUMEN
+    // =========================================================================
+    function renderResumen() {
+      const weeklyMap = getWeeklyConsumptionMap();
+      const totalTons = state.diets.reduce((acc, d) => acc + (Number(d.tons) || 0), 0);
+      document.getElementById('hdrWeek').textContent = state.weekNumber;
+      document.getElementById('sumWeekLabel').textContent = state.weekNumber;
+      document.getElementById('sumTonsTotal').textContent = fmt(totalTons, 1);
+      document.getElementById('kpiTargetWeeks').textContent = fmt(state.targetWeeks, 1);
+      const basisEl = document.getElementById('kpiBasisLabel');
+      if (basisEl) basisEl.textContent = getConsumptionBasisLabel();
+      document.getElementById('chartTargetLabel').textContent = fmt(state.targetWeeks, 1);
+
+      document.getElementById('lastCountBanner').textContent = state.lastMondayCount
+        ? `Último conteo de lunes guardado: ${state.lastMondayCount}`
+        : 'Sin conteo de lunes guardado aún. Captura tus existencias en bodega para calcular cada orden de compra.';
+
+      let totalStock = 0, totalBags = 0, totalWeekly = 0, totalBuyKg = 0, totalBuyBags = 0, criticalCount = 0;
+      const groups = {
+        PROVIMI: { key: 'PROVIMI', label: '🐷 PROVIMI (Cerdos + Preiniciadores)', stock: 0, weekly: 0, buy: 0 },
+        ADM: { key: 'ADM', label: '🐔🐑 ADM (Aves + Ovinos)', stock: 0, weekly: 0, buy: 0 },
+        ADITIVOS: { key: 'ADITIVOS', label: '💊 Aditivos / Medicamentos', stock: 0, weekly: 0, buy: 0 }
+      };
+
+      const criticalItems = [];
+      const activeForChart = [];
+
+      state.products.forEach(p => {
+        const c = getOrderCalc(p, weeklyMap[p.id] || 0);
+        totalStock += c.stockKg;
+        totalBags += (Number(p.bagKg) > 0 ? c.stockKg / p.bagKg : 0);
+        totalWeekly += c.weeklyKg;
+        totalBuyKg += c.finalKg;
+        totalBuyBags += c.finalBags;
+
+        if (groups[p.supplierGroup]) {
+          groups[p.supplierGroup].stock += c.stockKg;
+          groups[p.supplierGroup].weekly += c.weeklyKg;
+          groups[p.supplierGroup].buy += c.finalKg;
+        }
+        if (c.weeklyKg > 0) {
+          activeForChart.push({ name: p.name, cov: Math.min(c.covWeeks, 6), rawCov: c.covWeeks });
+          if (c.covWeeks < 1) {
+            criticalCount++;
+            criticalItems.push({ p, c });
+          }
+        }
+      });
+
+      document.getElementById('kpiTotalStock').textContent = `${fmt(totalStock)} kg`;
+      document.getElementById('kpiTotalBags').textContent = `${fmt(totalBags, 1)} sacos registrados`;
+      document.getElementById('kpiWeeklyReq').textContent = `${fmt(totalWeekly)} kg`;
+      document.getElementById('kpiToBuy').textContent = `${fmt(totalBuyKg)} kg`;
+      document.getElementById('kpiToBuyBags').textContent = `${fmt(totalBuyBags, 0)} sacos sugeridos`;
+      document.getElementById('kpiCriticalCount').textContent = criticalCount;
+
+      document.getElementById('areaSummaryGrid').innerHTML = Object.values(groups).map(g => `
+        <div onclick="openOrderForSupplier('${g.key}')" class="cursor-pointer bg-white hover:border-brand-crimson/50 rounded-2xl border border-stone-200 p-4 shadow-sm flex flex-col justify-between transition">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-bold text-sm text-stone-900">${g.label}</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${g.buy > 0 ? 'bg-red-50 text-brand-crimson' : 'bg-brand-oliveLight text-brand-olive'}">
+              ${g.buy > 0 ? `Pedir ${fmt(g.buy)} kg` : 'Cubierto'}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
+            <div><span class="text-stone-400 block">Existencia</span><strong class="text-stone-800">${fmt(g.stock)} kg</strong></div>
+            <div><span class="text-stone-400 block">Consumo/sem</span><strong class="text-stone-800">${fmt(g.weekly)} kg</strong></div>
+          </div>
+        </div>
+      `).join('');
+
+      criticalItems.sort((a, b) => a.c.covWeeks - b.c.covWeeks);
+      const critEl = document.getElementById('criticalList');
+      if (criticalItems.length === 0) {
+        critEl.innerHTML = `<div class="text-xs text-stone-500 p-3 bg-stone-50 rounded-xl">Todos los productos activos tienen ≥ 1 semana de cobertura.</div>`;
+      } else {
+        critEl.innerHTML = criticalItems.slice(0, 10).map(({ p, c }) => `
+          <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-red-50/70 border border-red-100">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-stone-900 truncate">${p.name}</div>
+              <div class="text-[11px] text-stone-500">${p.supplierGroup} · Stock: ${fmt(c.stockKg)} kg · Req: ${fmt(c.weeklyKg)} kg/sem</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs font-extrabold text-brand-crimson">${fmt(c.finalKg)} kg</div>
+              <div class="text-[10px] text-stone-500">${fmt(c.finalBags, 0)} sacos</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      renderCoverageChart(activeForChart.slice(0, 14));
+    }
+
+    function renderCoverageChart(items) {
+      const ctx = document.getElementById('coverageChart').getContext('2d');
+      if (coverageChartInstance) coverageChartInstance.destroy();
+      coverageChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: items.map(i => i.name.length > 18 ? i.name.slice(0, 17) + '…' : i.name),
+          datasets: [{
+            label: 'Semanas de cobertura',
+            data: items.map(i => +i.cov.toFixed(2)),
+            backgroundColor: items.map(i => i.rawCov < 1 ? '#9E1B32' : (i.rawCov < state.targetWeeks ? '#D97706' : '#4A6741')),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} semanas` } }
+          },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Semanas', font: { size: 11 } } },
+            x: { ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 25 } }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // RENDER: INVENTARIO / CONTEO LUNES
+    // =========================================================================
+    function setInvSubView(sub) {
+      state.invSubView = sub;
+      saveState();
+      renderInventario();
+    }
+
+    function createStockSnapshot(customLabel) {
+      const nowStr = new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+      const items = {};
+      let totalKg = 0;
+      state.products.forEach(p => {
+        const sk = getProductStockKg(p);
+        totalKg += sk;
+        items[p.id] = { bags: Number(p.bags) || 0, looseKg: Number(p.looseKg) || 0, stockKg: sk };
+      });
+      return {
+        id: 'snap_' + Date.now(),
+        label: customLabel || `Corte ${nowStr}`,
+        dateStr: nowStr,
+        totalKg: +totalKg.toFixed(1),
+        items
+      };
+    }
+
+    function saveReferenceSnapshot() {
+      const snap = createStockSnapshot(`Referencia (${new Date().toLocaleDateString('es-MX')})`);
+      state.mondaySnapshots = state.mondaySnapshots || [];
+      state.mondaySnapshots.unshift(snap);
+      if (state.mondaySnapshots.length > 12) state.mondaySnapshots = state.mondaySnapshots.slice(0, 12);
+      state.selectedSnapshotId = snap.id;
+      saveState();
+      renderInventario();
+      showToast('Corte de referencia guardado sin afectar pronósticos ni pedidos');
+    }
+
+    function setCustomWeeklyKg(prodId, val) {
+      const currentMap = getWeeklyConsumptionMap();
+      if (!state.customWeeklyKg) state.customWeeklyKg = {};
+      state.products.forEach(p => {
+        if (state.customWeeklyKg[p.id] === undefined) {
+          state.customWeeklyKg[p.id] = +(currentMap[p.id] || 0).toFixed(1);
+        }
+      });
+      state.customWeeklyKg[prodId] = Math.max(0, Number(val) || 0);
+      state.consumptionBasis = 'custom';
+      state.orderOverrides = {};
+      saveState();
+      renderCurrentView();
+      showToast('Consumo semanal actualizado');
+    }
+
+    function applyConsumptionPreset(basis) {
+      const dietMap = getDietConsumptionMap();
+      state.customWeeklyKg = {};
+      state.products.forEach(p => {
+        const st = getHistStats(p.id);
+        const val = basis === 'diets' ? (dietMap[p.id] || 0) : (st[basis] || 0);
+        state.customWeeklyKg[p.id] = +val.toFixed(1);
+      });
+      state.consumptionBasis = basis;
+      state.orderOverrides = {};
+      saveState();
+      renderCurrentView();
+      showToast('Base de consumo semanal actualizada');
+    }
+
+    function renderInventario() {
+      const sub = state.invSubView || 'ver';
+      document.querySelectorAll('.inv-sub-btn').forEach(btn => {
+        const active = btn.dataset.sub === sub;
+        btn.className = `inv-sub-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+          active ? 'bg-brand-crimson text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+        }`;
+      });
+      document.getElementById('invPanelVer').classList.toggle('hidden', sub !== 'ver');
+      document.getElementById('invPanelConteo').classList.toggle('hidden', sub !== 'conteo');
+      document.getElementById('invPanelEstadistico').classList.toggle('hidden', sub !== 'estadistico');
+
+      const weeklyMap = getWeeklyConsumptionMap();
+      document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+        const active = btn.dataset.area === state.invAreaFilter;
+        btn.className = `inv-filter-btn px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+          active ? 'bg-brand-crimson text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+        }`;
+      });
+
+      const q = state.invSearch.trim().toLowerCase();
+      const filtered = state.products.filter(p => {
+        if (state.invAreaFilter !== 'ALL' && p.supplierGroup !== state.invAreaFilter) return false;
+        if (q && !p.name.toLowerCase().includes(q) && !p.code.toLowerCase().includes(q) && !(p.stageLabel || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      // Render Sub-view: Ver Inventario (Lunes Pasado vs Hoy)
+      const snaps = state.mondaySnapshots || [];
+      const snapSel = document.getElementById('selectMondaySnapshot');
+      if (snaps.length === 0) {
+        snapSel.innerHTML = `<option value="">Sin corte guardado aún</option>`;
+      } else {
+        snapSel.innerHTML = snaps.map(sn => `<option value="${sn.id}">${sn.label} (${fmt(sn.totalKg)} kg)</option>`).join('');
+        if (state.selectedSnapshotId && snaps.some(x => x.id === state.selectedSnapshotId)) {
+          snapSel.value = state.selectedSnapshotId;
+        } else {
+          state.selectedSnapshotId = snaps[0].id;
+          snapSel.value = snaps[0].id;
+        }
+      }
+      const activeSnap = snaps.find(x => x.id === state.selectedSnapshotId) || null;
+      let sumPrev = 0, sumToday = 0;
+      document.getElementById('invViewTableBody').innerHTML = filtered.map(p => {
+        const c = getOrderCalc(p, weeklyMap[p.id] || 0);
+        sumToday += c.stockKg;
+        const prevObj = activeSnap && activeSnap.items ? activeSnap.items[p.id] : null;
+        const prevKg = prevObj ? Number(prevObj.stockKg) : null;
+        if (prevKg !== null) sumPrev += prevKg;
+        const diffKg = prevKg !== null ? c.stockKg - prevKg : null;
+        const diffTxt = diffKg === null ? '—' : `${diffKg >= 0 ? '+' : ''}${fmt(diffKg)} kg`;
+        const diffCls = diffKg === null ? 'text-stone-400' : (diffKg < 0 ? 'text-brand-crimson font-bold' : 'text-brand-olive font-bold');
+        const covTxt = c.weeklyKg > 0 ? `${fmt(c.covWeeks, 1)} sem` : 'Sin consumo';
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-2">
+              <div class="font-bold text-stone-900">${p.name}</div>
+              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span class="font-mono text-[10px] text-stone-500">${p.code || '—'}</span>
+                ${renderStageBadge(p)}
+              </div>
+            </td>
+            <td class="p-2 text-right text-stone-600">${prevKg !== null ? `${fmt(prevKg)} kg <span class="block text-[10px] text-stone-400">${prevObj.bags} sacos</span>` : '—'}</td>
+            <td class="p-2 text-right font-bold text-stone-900">${fmt(c.stockKg)} kg <span class="block text-[10px] font-normal text-stone-500">${p.bags} sacos + ${fmt(p.looseKg)} kg</span></td>
+            <td class="p-2 text-right ${diffCls}">${diffTxt}</td>
+            <td class="p-2 text-right text-stone-700">${fmt(c.weeklyKg)} kg</td>
+            <td class="p-2 text-center font-semibold text-stone-700">${covTxt}</td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('verPrevTotalKg').textContent = activeSnap ? `${fmt(sumPrev)} kg` : '—';
+      document.getElementById('verTodayTotalKg').textContent = `${fmt(sumToday)} kg`;
+      document.getElementById('verDiffTotalKg').textContent = activeSnap ? `${sumToday - sumPrev >= 0 ? '+' : ''}${fmt(sumToday - sumPrev)} kg` : '—';
+
+      // Render Sub-view: Estadístico Semanal Editable
+      document.getElementById('statsTableBody').innerHTML = filtered.map(p => {
+        const st = getHistStats(p.id);
+        const activeVal = weeklyMap[p.id] || 0;
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-2">
+              <div class="font-bold text-stone-900">${p.name}</div>
+              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span class="text-[10px] font-bold text-stone-400 uppercase">${p.supplierGroup}</span>
+                ${renderStageBadge(p)}
+              </div>
+            </td>
+            <td class="p-2 text-right text-stone-500">${fmt(st.s47)} kg</td>
+            <td class="p-2 text-right font-bold text-stone-900">${fmt(st.avg12)} kg</td>
+            <td class="p-2 text-right text-stone-500">${fmt(st.min12, 0)}–${fmt(st.max12, 0)} kg</td>
+            <td class="p-2 text-right font-semibold text-amber-700">${fmt(st.p80)} kg</td>
+            <td class="p-2 text-right">
+              <input type="number" min="0" step="0.5" value="${activeVal.toFixed(1)}" onchange="setCustomWeeklyKg('${p.id}', this.value)" class="w-24 px-2 py-1.5 rounded-lg border border-stone-200 bg-stone-50 focus:bg-white text-right font-bold text-brand-crimson" />
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const grid = document.getElementById('inventoryGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-stone-200 p-8 text-center text-sm text-stone-500">No se encontraron productos con ese filtro.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const c = getOrderCalc(p, weeklyMap[p.id] || 0);
+        const covBadge = c.weeklyKg === 0
+          ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-500">Sin consumo S${state.weekNumber}</span>`
+          : c.covWeeks < 1
+            ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-brand-crimson">Crítico · ${fmt(c.covWeeks, 1)} sem</span>`
+            : c.covWeeks < state.targetWeeks
+              ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700">Atención · ${fmt(c.covWeeks, 1)} sem</span>`
+              : `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-oliveLight text-brand-olive">OK · ${fmt(c.covWeeks, 1)} sem</span>`;
+
+        return `
+          <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm space-y-3" data-prod-card="${p.id}">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wide">${p.supplier}</span>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-100 text-stone-600">${p.code || '—'}</span>
+                  <button onclick="openEditProductModal('${p.id}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-600 transition" title="Editar código, nombre o color">✏️ Editar</button>
+                </div>
+                <h3 class="font-bold text-sm text-stone-900 leading-snug mt-1">${p.name}</h3>
+                <div class="mt-1">${renderStageBadge(p)}</div>
+              </div>
+              ${covBadge}
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 bg-stone-50 p-2.5 rounded-xl">
+              <div>
+                <label class="block text-[11px] font-semibold text-stone-500 mb-1">Sacos (${p.bagKg} kg)</label>
+                <div class="flex items-center gap-1">
+                  <button onclick="stepBags('${p.id}', -1)" class="w-10 h-10 rounded-lg bg-white border border-stone-200 font-bold text-stone-700 active:bg-stone-100">−</button>
+                  <input type="number" min="0" step="1" value="${p.bags}" onchange="setBags('${p.id}', this.value)" class="w-full h-10 text-center rounded-lg border border-stone-200 bg-white font-bold text-sm" />
+                  <button onclick="stepBags('${p.id}', 1)" class="w-10 h-10 rounded-lg bg-white border border-stone-200 font-bold text-stone-700 active:bg-stone-100">+</button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-stone-500 mb-1">Kg sueltos (pico)</label>
+                <input type="number" min="0" step="0.5" value="${p.looseKg}" onchange="setLoose('${p.id}', this.value)" class="w-full h-10 px-2.5 text-center rounded-lg border border-stone-200 bg-white font-bold text-sm" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-stone-100">
+              <div>
+                <span class="text-stone-400">Existencia:</span>
+                <strong class="text-stone-900 ml-1">${fmt(c.stockKg)} kg</strong>
+              </div>
+              <div>
+                <span class="text-stone-400">Consumo:</span>
+                <strong class="text-stone-700 ml-1">${fmt(c.weeklyKg)} kg/sem</strong>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function stepBags(id, delta) {
+      const p = state.products.find(x => x.id === id);
+      if (!p) return;
+      p.bags = Math.max(0, (Number(p.bags) || 0) + delta);
+      saveState();
+      renderInventario();
+    }
+
+    function setBags(id, val) {
+      const p = state.products.find(x => x.id === id);
+      if (!p) return;
+      p.bags = Math.max(0, Number(val) || 0);
+      saveState();
+      renderInventario();
+    }
+
+    function setLoose(id, val) {
+      const p = state.products.find(x => x.id === id);
+      if (!p) return;
+      p.looseKg = Math.max(0, Number(val) || 0);
+      saveState();
+      renderInventario();
+    }
+
+    // =========================================================================
+    // RENDER: PEDIDOS SEPARADOS POR PROVEEDOR + PREINICIADORES
+    // =========================================================================
+    function getFilteredOrderItems() {
+      const weeklyMap = getWeeklyConsumptionMap();
+      const items = [];
+      state.products.forEach(p => {
+        if (p.supplierGroup !== state.orderSupplier) return;
+        const c = getOrderCalc(p, weeklyMap[p.id] || 0);
+        if (state.onlyShortage && c.finalKg <= 0) return;
+        items.push({ p, c });
+      });
+      return items;
+    }
+
+    function renderPrestartersTable() {
+      const wrap = document.getElementById('prestartersSection');
+      if (state.orderSupplier !== 'PROVIMI') {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.classList.remove('hidden');
+
+      let totalBagsAll = 0;
+      document.getElementById('prestarterTableBody').innerHTML = state.prestarters.map(pr => {
+        const rowTot = getPrestarterRowTotal(pr);
+        totalBagsAll += rowTot;
+        return `
+          <tr>
+            <td class="p-1">
+              <input type="text" value="${pr.code}" onchange="setPrestarterMeta('${pr.id}','code',this.value)" class="w-24 px-1.5 py-1 rounded-lg border border-transparent hover:border-stone-200 focus:border-brand-crimson focus:bg-white bg-transparent font-mono text-[11px] text-stone-600" title="Editar código" />
+            </td>
+            <td class="p-1">
+              <input type="text" value="${pr.name}" onchange="setPrestarterMeta('${pr.id}','name',this.value)" class="w-36 sm:w-44 px-1.5 py-1 rounded-lg border border-transparent hover:border-stone-200 focus:border-brand-crimson focus:bg-white bg-transparent font-bold text-stone-900" title="Editar nombre" />
+            </td>
+            <td class="p-1.5 text-center text-stone-500">${fmt(pr.bagKg, 1)}</td>
+            ${['gv1','gv2','gv3','gv4','gv5','gv6'].map(gk => `
+              <td class="p-1">
+                <input type="number" min="0" step="1" value="${pr[gk]}" onchange="setPrestarterFarm('${pr.id}','${gk}',this.value)" class="w-12 px-1 py-1.5 text-center rounded-lg border border-stone-200 font-semibold bg-stone-50 focus:bg-white" />
+              </td>
+            `).join('')}
+            <td class="p-1.5 text-right font-extrabold text-brand-olive">${fmt(rowTot, 1)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('preTotalBags').textContent = fmt(totalBagsAll, 1);
+      document.getElementById('preTotalKg').textContent = fmt(totalBagsAll * 25, 1);
+    }
+
+    function setPrestarterFarm(id, farmKey, val) {
+      const pr = state.prestarters.find(x => x.id === id);
+      if (!pr) return;
+      pr[farmKey] = Math.max(0, Number(val) || 0);
+      saveState();
+      renderPrestartersTable();
+    }
+
+    function setPrestarterMeta(id, field, val) {
+      const pr = state.prestarters.find(x => x.id === id);
+      if (!pr) return;
+      pr[field] = String(val || '').trim() || (field === 'code' ? '—' : pr.name);
+      saveState();
+      showToast('Preiniciador actualizado');
+    }
+
+    function openEditProductModal(id) {
+      const p = state.products.find(x => x.id === id);
+      if (!p) return;
+      editingProductId = id;
+      document.getElementById('editProdCode').value = p.code || '';
+      document.getElementById('editProdName').value = p.name || '';
+      document.getElementById('editProdStage').value = p.stageLabel || '';
+      document.getElementById('editProdColor').value = p.colorTag || '';
+      document.getElementById('editProdBagKg').value = p.bagKg || 25;
+      document.getElementById('editProductModal').classList.remove('hidden');
+    }
+
+    function renderPedido() {
+      document.getElementById('inputTargetWeeks').value = state.targetWeeks;
+      const basisSel = document.getElementById('selectConsumptionBasis');
+      if (basisSel) basisSel.value = state.consumptionBasis || 'diets';
+      document.getElementById('inputOrderDate').value = state.orderDate;
+      document.getElementById('inputDeliveryDate').value = state.deliveryDate;
+      document.getElementById('ordSemStart').textContent = state.weekNumber;
+      document.getElementById('ordSemEnd').textContent = Number(state.weekNumber) + 1;
+      document.getElementById('chkRoundBags').checked = state.roundBags;
+      document.getElementById('chkOnlyShortage').checked = state.onlyShortage;
+
+      document.querySelectorAll('.sup-order-btn').forEach(btn => {
+        const active = btn.dataset.supplier === state.orderSupplier;
+        btn.className = `sup-order-btn p-3 rounded-xl border text-left transition ${
+          active ? 'bg-brand-crimson text-white border-brand-crimson shadow-sm' : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+        }`;
+      });
+
+      document.querySelectorAll('.wk-preset').forEach(btn => {
+        const active = Number(btn.dataset.weeks) === Number(state.targetWeeks);
+        btn.className = `wk-preset px-2.5 py-2 rounded-lg text-xs font-semibold border transition ${
+          active ? 'bg-brand-crimson text-white border-brand-crimson' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+        }`;
+      });
+
+      renderPrestartersTable();
+
+      const rows = getFilteredOrderItems();
+      let countItems = 0, totalKg = 0, totalBags = 0;
+      rows.forEach(({ c }) => {
+        if (c.finalKg > 0) countItems++;
+        totalKg += c.finalKg;
+        totalBags += c.finalBags;
+      });
+
+      document.getElementById('ordCountItems').textContent = countItems;
+      document.getElementById('ordTotalKg').textContent = `${fmt(totalKg)} kg`;
+      document.getElementById('ordTotalBags').textContent = fmt(totalBags, 1);
+
+      const listEl = document.getElementById('orderList');
+      if (rows.length === 0) {
+        listEl.innerHTML = `<div class="bg-white rounded-2xl border border-stone-200 p-8 text-center text-sm text-stone-500">No hay micros por pedir para <strong>${state.orderSupplier}</strong> con los filtros actuales.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = rows.map(({ p, c }) => `
+        <div class="bg-white rounded-2xl border border-stone-200 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">${p.area}</span>
+              ${renderStageBadge(p)}
+              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">${p.code || '—'}</span>
+              <span class="text-xs text-stone-400">Pres. ${fmt(p.bagKg, 1)} kg</span>
+              <button onclick="openEditProductModal('${p.id}')" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-600 transition">✏️</button>
+            </div>
+            <h3 class="font-bold text-sm text-stone-900 mt-1">${p.name}</h3>
+            <div class="text-xs text-stone-500 mt-0.5">
+              Stock: <strong>${fmt(c.stockKg)} kg</strong> · Req (${fmt(state.targetWeeks, 1)} sem): <strong>${fmt(c.reqTargetKg)} kg</strong>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0 bg-stone-50 p-2.5 rounded-xl">
+            <div class="text-right">
+              <span class="block text-[10px] font-semibold text-stone-400 uppercase">Sacos</span>
+              <input type="number" step="1" min="0" value="${Math.round(c.finalBags)}" onchange="overrideOrderBags('${p.id}', this.value)" class="w-20 px-2 py-1.5 rounded-lg border border-stone-200 bg-white text-right font-extrabold text-sm text-stone-900" />
+            </div>
+            <div class="text-right min-w-[76px]">
+              <span class="block text-[10px] font-semibold text-stone-400 uppercase">KG</span>
+              <strong class="text-sm text-brand-crimson">${fmt(c.finalKg)} kg</strong>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function overrideOrderBags(id, val) {
+      const p = state.products.find(x => x.id === id);
+      if (!p) return;
+      const bags = Math.max(0, Number(val) || 0);
+      state.orderOverrides[id] = +(bags * p.bagKg).toFixed(1);
+      saveState();
+      renderPedido();
+    }
+
+    function getSupplierDisplayName(sup) {
+      if (sup === 'PROVIMI') return 'PROVIMI (Cerdos + Preiniciadores)';
+      if (sup === 'ADM') return 'ADM (Aves + Ovinos)';
+      return 'Aditivos y Medicamentos';
+    }
+
+    function buildWhatsAppText() {
+      const rows = getFilteredOrderItems().filter(x => x.c.finalKg > 0);
+      const preRows = state.orderSupplier === 'PROVIMI' ? state.prestarters.filter(pr => getPrestarterRowTotal(pr) > 0) : [];
+      if (rows.length === 0 && preRows.length === 0) return null;
+
+      const lines = [
+        `*ORDEN DE COMPRA · GRANJA EL VOLANTÍN*`,
+        `Proveedor: *${getSupplierDisplayName(state.orderSupplier)}*`,
+        `Fecha del pedido: ${fmtDateDMY(state.orderDate)} (Sem ${state.weekNumber})`,
+        `Posible llegada: *${fmtDateDMY(state.deliveryDate)}* (Sem ${Number(state.weekNumber) + 1})`,
+        ``
+      ];
+
+      if (preRows.length > 0) {
+        lines.push(`*PREINICIADORES (25 kg):*`);
+        let preTot = 0;
+        preRows.forEach(pr => {
+          const t = getPrestarterRowTotal(pr);
+          preTot += t;
+          const dist = ['gv1','gv2','gv3','gv4','gv5','gv6'].filter(g => pr[g] > 0).map(g => `${g.toUpperCase()}:${pr[g]}`).join(', ');
+          lines.push(`• [${pr.code}] ${pr.name}: *${fmt(t, 1)} sacos* (${dist})`);
+        });
+        lines.push(`Subtotal Preiniciadores: *${fmt(preTot, 1)} sacos*`, ``);
+      }
+
+      if (rows.length > 0) {
+        let totalKg = 0, totalBags = 0;
+        lines.push(`*MICROS:*`);
+        rows.forEach(({ p, c }) => {
+          totalKg += c.finalKg;
+          totalBags += c.finalBags;
+          const codeTxt = p.code && p.code !== '—' ? `[${p.code}] ` : '';
+          lines.push(`• ${codeTxt}${p.name} (${fmt(p.bagKg, 1)} kg): *${fmt(c.finalBags, 1)} sacos* = ${fmt(c.finalKg)} kg`);
+        });
+        lines.push(``, `*TOTAL MICROS:* ${fmt(totalBags, 1)} sacos · *${fmt(totalKg)} kg*`);
+      }
+
+      return lines.join('\n');
+    }
+
+    function copyTextFallback(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast('Orden copiada para WhatsApp')).catch(() => fallbackExecCopy(text));
+      } else {
+        fallbackExecCopy(text);
+      }
+    }
+
+    function fallbackExecCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('Orden copiada para WhatsApp'); } catch (e) { showToast('No se pudo copiar automático'); }
+      document.body.removeChild(ta);
+    }
+
+    function openPurchaseOrderModal() {
+      const rows = getFilteredOrderItems().filter(x => x.c.finalKg > 0);
+      const preRows = state.orderSupplier === 'PROVIMI' ? state.prestarters.filter(pr => getPrestarterRowTotal(pr) > 0) : [];
+      if (rows.length === 0 && preRows.length === 0) return showToast('No hay productos con cantidad > 0 para generar la Orden de Compra');
+
+      document.getElementById('poSpecies').textContent = state.orderSupplier === 'PROVIMI' ? 'Cerdos' : (state.orderSupplier === 'ADM' ? 'Aves y Ovinos' : 'Aditivos');
+      document.getElementById('poDate').textContent = fmtDateDMY(state.orderDate);
+      document.getElementById('poWeekStart').textContent = state.weekNumber;
+      document.getElementById('poDelivery').textContent = fmtDateDMY(state.deliveryDate);
+      document.getElementById('poWeekEnd').textContent = Number(state.weekNumber) + 1;
+      document.getElementById('poBannerTitle').textContent = state.orderSupplier === 'PROVIMI'
+        ? 'MICROS Y PREINICIADORES · CERDOS'
+        : (state.orderSupplier === 'ADM' ? 'MICROS · AVES Y OVINOS (ADM)' : 'ADITIVOS Y MEDICAMENTOS');
+
+      // Prestarters table
+      const preWrap = document.getElementById('poPrestartersWrap');
+      if (preRows.length > 0) {
+        preWrap.classList.remove('hidden');
+        let preSum = 0;
+        const bodyHtml = preRows.map(pr => {
+          const t = getPrestarterRowTotal(pr);
+          preSum += t;
+          return `
+            <tr>
+              <td class="border border-stone-800 p-1.5 text-center font-mono">${pr.code}</td>
+              <td class="border border-stone-800 p-1.5 text-center font-semibold">${pr.name}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.bagKg, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv1, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv2, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv3, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv4, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv5, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center">${fmt(pr.gv6, 1)}</td>
+              <td class="border border-stone-800 p-1.5 text-center font-bold">${fmt(t, 1)}</td>
+            </tr>
+          `;
+        }).join('') + `
+          <tr class="font-extrabold bg-stone-50">
+            <td class="border border-stone-800 p-1.5" colspan="9"></td>
+            <td class="border border-stone-800 p-1.5 text-center">${fmt(preSum, 1)}</td>
+          </tr>
+        `;
+        document.getElementById('poPrestartersBody').innerHTML = bodyHtml;
+      } else {
+        preWrap.classList.add('hidden');
+      }
+
+      // Micros table
+      let totalKg = 0, totalBags = 0;
+      document.getElementById('poTableBody').innerHTML = rows.map(({ p, c }) => {
+        totalKg += c.finalKg;
+        totalBags += c.finalBags;
+        return `
+          <tr>
+            <td class="border border-stone-800 p-1.5 text-center font-mono text-[11px]">${p.code || '—'}</td>
+            <td class="border border-stone-800 p-1.5 text-center font-semibold">${p.name}</td>
+            <td class="border border-stone-800 p-1.5 text-center">${fmt(p.bagKg, 1)}</td>
+            <td class="border border-stone-800 p-1.5 text-center">${fmt(c.finalBags, 1)} sacos</td>
+            <td class="border border-stone-800 p-1.5 text-right font-bold">${fmt(c.finalKg)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('poTotalBags').textContent = `${fmt(totalBags, 1)} sacos`;
+      document.getElementById('poTotalKg').textContent = fmt(totalKg);
+      document.getElementById('poModal').classList.remove('hidden');
+    }
+
+    function saveCurrentOrder() {
+      const rows = getFilteredOrderItems().filter(x => x.c.finalKg > 0);
+      if (rows.length === 0) return showToast('No hay micros con cantidad > 0 para guardar');
+      const items = rows.map(({ p, c }) => ({ id: p.id, name: p.name, kg: c.finalKg, bagKg: p.bagKg }));
+      const totalKg = items.reduce((a, b) => a + b.kg, 0);
+      const folio = `OC-${state.orderSupplier}-S${state.weekNumber}-${state.savedOrders.length + 1}`;
+      state.savedOrders.unshift({
+        id: 'ord_' + Date.now(),
+        folio,
+        supplier: getSupplierDisplayName(state.orderSupplier),
+        date: fmtDateDMY(state.orderDate),
+        deliveryDate: fmtDateDMY(state.deliveryDate),
+        status: 'Pendiente',
+        totalKg,
+        items
+      });
+      saveState();
+      showToast(`Orden ${folio} guardada en Historial`);
+    }
+
+    // =========================================================================
+    // RENDER: PRODUCCIÓN Y DIETAS
+    // =========================================================================
+    function renderProduccion() {
+      document.getElementById('inputWeekNum').value = state.weekNumber;
+      const groups = {};
+      state.diets.forEach(d => {
+        if (!groups[d.area]) groups[d.area] = [];
+        groups[d.area].push(d);
+      });
+
+      document.getElementById('productionGroups').innerHTML = Object.entries(groups).map(([area, list]) => {
+        const sumT = list.reduce((a, b) => a + (Number(b.tons) || 0), 0);
+        return `
+          <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+              <h3 class="font-bold text-sm sm:text-base text-stone-900">${area}</h3>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-stone-100 text-stone-800">${fmt(sumT, 1)} t</span>
+            </div>
+            <div class="space-y-2">
+              ${list.map(d => {
+                const doseDesc = Object.entries(d.doses).map(([pid, kg]) => {
+                  const pr = state.products.find(x => x.id === pid);
+                  return `${pr ? pr.name : pid}: ${kg} kg/t`;
+                }).join(' · ');
+                return `
+                  <div class="flex items-center justify-between gap-3 py-1.5 border-b border-stone-50 last:border-0">
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-stone-800 truncate">${d.name}</div>
+                      <div class="text-[11px] text-stone-400 truncate" title="${doseDesc}">${doseDesc}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <input type="number" step="0.5" min="0" value="${d.tons}" onchange="setDietTons('${d.id}', this.value)" class="w-20 px-2.5 py-1.5 rounded-lg border border-stone-200 text-right font-bold text-xs" />
+                      <span class="text-xs text-stone-500">t</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setDietTons(id, val) {
+      const d = state.diets.find(x => x.id === id);
+      if (!d) return;
+      d.tons = Math.max(0, Number(val) || 0);
+      saveState();
+      renderProduccion();
+    }
+
+    // =========================================================================
+    // RENDER: CALENDARIO, PEDIDOS GUARDADOS Y MOVIMIENTOS
+    // =========================================================================
+    const APPS_SCRIPT_CODE = `function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Estado_JSON');
+  var raw = sh.getRange('B2').getValue();
+  return ContentService.createTextOutput(raw || '{}').setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var data = JSON.parse(e.postData.contents);
+  var shJson = ss.getSheetByName('Estado_JSON');
+  shJson.getRange('A2').setValue(new Date());
+  shJson.getRange('B2').setValue(JSON.stringify(data));
+  var shEx = ss.getSheetByName('Existencias');
+  if (shEx && data.products) {
+    var rows = data.products.map(function(p) {
+      return [p.id, p.supplierGroup, p.code, p.name, p.stageLabel || '', p.bagKg, p.bags, p.looseKg, (p.bags * p.bagKg) + p.looseKg];
+    });
+    if (rows.length > 0) shEx.getRange(2, 1, rows.length, 9).setValues(rows);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    function updateCloudStatusUI() {
+      const inp = document.getElementById('inputCloudSyncUrl');
+      const badge = document.getElementById('cloudSyncStatus');
+      if (inp) inp.value = state.cloudSyncUrl || '';
+      if (badge) {
+        badge.textContent = state.cloudSyncUrl
+          ? (state.lastSyncAt ? `Sincronizado: ${state.lastSyncAt}` : 'URL guardada')
+          : 'Sin conectar';
+        badge.className = state.cloudSyncUrl
+          ? 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 shrink-0'
+          : 'text-xs font-semibold px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 shrink-0';
+      }
+    }
+
+    async function pushToCloud() {
+      if (!state.cloudSyncUrl) {
+        switchTab('historial');
+        return showToast('Primero pega la URL de Google Apps Script en Calendario y Movimientos');
+      }
+      try {
+        showToast('Subiendo existencias a Google Sheets...');
+        const payload = {
+          weekNumber: state.weekNumber,
+          lastMondayCount: state.lastMondayCount,
+          products: state.products,
+          prestarters: state.prestarters,
+          diets: state.diets,
+          savedOrders: state.savedOrders,
+          movements: state.movements.slice(0, 50)
+        };
+        await fetch(state.cloudSyncUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        state.lastSyncAt = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+        saveState();
+        updateCloudStatusUI();
+        showToast('Existencias enviadas a Google Sheets');
+      } catch (err) {
+        showToast('Error al subir a Google Sheets');
+      }
+    }
+
+    async function pullFromCloud() {
+      if (!state.cloudSyncUrl) {
+        switchTab('historial');
+        return showToast('Primero pega la URL de Google Apps Script en Calendario y Movimientos');
+      }
+      try {
+        showToast('Descargando existencias de Google Sheets...');
+        const res = await fetch(state.cloudSyncUrl);
+        const data = await res.json();
+        if (data && data.products) {
+          state.products = data.products;
+          if (data.prestarters) state.prestarters = data.prestarters;
+          if (data.diets) state.diets = data.diets;
+          if (data.weekNumber) state.weekNumber = data.weekNumber;
+          if (data.lastMondayCount) state.lastMondayCount = data.lastMondayCount;
+          if (data.savedOrders) state.savedOrders = data.savedOrders;
+          if (data.movements) state.movements = data.movements;
+          state.lastSyncAt = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+          saveState();
+          renderCurrentView();
+          updateCloudStatusUI();
+          showToast('Existencias actualizadas desde Google Sheets');
+        } else {
+          showToast('La hoja aún no tiene datos guardados');
+        }
+      } catch (err) {
+        showToast('No se pudo leer Google Sheets (revisa la URL)');
+      }
+    }
+
+    function renderHistoricalAnalytics() {
+      const sel = document.getElementById('selectHistProduct');
+      if (!sel) return;
+      if (sel.options.length <= 4) {
+        state.products.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.name} (${p.supplierGroup})`;
+          sel.appendChild(opt);
+        });
+      }
+      const filterVal = state.histFilter || 'ALL_MICROS';
+      sel.value = filterVal;
+
+      const series = HISTORICAL_WEEKS.map((_, idx) => {
+        let sum = 0;
+        state.products.forEach(p => {
+          if (filterVal === 'ALL_MICROS' || filterVal === p.supplierGroup || filterVal === p.id) {
+            sum += (HISTORICAL_CONSUMPTION[p.id] || [])[idx] || 0;
+          }
+        });
+        return +sum.toFixed(1);
+      });
+
+      const ctx = document.getElementById('historyChart').getContext('2d');
+      if (historyChartInstance) historyChartInstance.destroy();
+      historyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: HISTORICAL_WEEKS,
+          datasets: [
+            {
+              label: 'Consumo (kg)',
+              data: series,
+              backgroundColor: 'rgba(139, 30, 63, 0.78)',
+              borderRadius: 6,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: 'Alimento enviado (t)',
+              data: HISTORICAL_FEED_TONS,
+              borderColor: '#5B6E2D',
+              backgroundColor: '#5B6E2D',
+              tension: 0.25,
+              borderWidth: 2,
+              pointRadius: 3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'kg insumo', font: { size: 11 } } },
+            y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 't alimento', font: { size: 11 } } }
+          }
+        }
+      });
+
+      document.getElementById('histTableBody').innerHTML = state.products.map(p => {
+        const st = getHistStats(p.id);
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="p-2 text-[11px] font-bold text-stone-500">${p.supplierGroup}</td>
+            <td class="p-2 font-semibold text-stone-900">${p.name}</td>
+            <td class="p-2 text-right">${fmt(st.s47)} kg</td>
+            <td class="p-2 text-right">${fmt(st.avg4)} kg</td>
+            <td class="p-2 text-right font-bold text-brand-crimson">${fmt(st.avg12)} kg</td>
+            <td class="p-2 text-right text-stone-600">${fmt(st.max12)} kg</td>
+            <td class="p-2 text-right font-semibold text-stone-800">${fmt(st.total12)} kg</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderHistorial() {
+      renderHistoricalAnalytics();
+      const mondays = [];
+      const d = new Date();
+      const diffToMon = (8 - d.getDay()) % 7 || 7;
+      for (let i = 0; i < 4; i++) {
+        const m = new Date(d);
+        m.setDate(d.getDate() + (i === 0 && d.getDay() === 1 ? 0 : diffToMon + (i - (d.getDay() === 1 ? 1 : 0)) * 7));
+        mondays.push(m);
+      }
+      document.getElementById('calendarCards').innerHTML = mondays.map((m, idx) => `
+        <div class="p-3.5 rounded-xl border ${idx === 0 ? 'border-brand-crimson bg-red-50/40' : 'border-stone-200 bg-stone-50'}">
+          <div class="text-[11px] font-bold uppercase ${idx === 0 ? 'text-brand-crimson' : 'text-stone-400'}">${idx === 0 ? 'Próximo Inventario' : 'Programado'}</div>
+          <div class="font-bold text-sm text-stone-900 mt-1">${m.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
+          <div class="text-xs text-stone-500 mt-1">Conteo bodega + OC PROVIMI / ADM</div>
+        </div>
+      `).join('');
+
+      const ordEl = document.getElementById('savedOrdersList');
+      if (state.savedOrders.length === 0) {
+        ordEl.innerHTML = `<div class="text-xs text-stone-500 p-3 bg-stone-50 rounded-xl">Aún no hay órdenes guardadas. Genera una desde la pestaña "Pedidos y Orden de Compra".</div>`;
+      } else {
+        ordEl.innerHTML = state.savedOrders.map(o => `
+          <div class="p-3.5 rounded-xl border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <strong class="text-sm text-stone-900">${o.folio}</strong>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-700">${o.supplier || ''}</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${o.status === 'Recibido' ? 'bg-brand-oliveLight text-brand-olive' : 'bg-amber-50 text-amber-700'}">${o.status}</span>
+              </div>
+              <div class="text-xs text-stone-500 mt-0.5">Pedido: ${o.date} · Posible llegada: <strong>${o.deliveryDate || '—'}</strong> · ${o.items.length} productos · <strong>${fmt(o.totalKg)} kg</strong></div>
+            </div>
+            ${o.status !== 'Recibido' ? `
+              <button onclick="openReceiveModal('${o.id}')" class="px-3.5 py-2 rounded-xl bg-brand-olive text-white text-xs font-semibold shrink-0">
+                ✔ Marcar Recibido
+              </button>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      const movEl = document.getElementById('movementsList');
+      if (state.movements.length === 0) {
+        movEl.innerHTML = `<div class="text-xs text-stone-500 p-3 bg-stone-50 rounded-xl">Sin movimientos registrados aún.</div>`;
+      } else {
+        movEl.innerHTML = state.movements.slice(0, 50).map(m => `
+          <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-stone-50 border border-stone-100 text-xs">
+            <div>
+              <strong class="text-stone-900">${m.productName}</strong>
+              <span class="text-stone-400 ml-1">(${m.type})</span>
+              <div class="text-[11px] text-stone-500">${m.date} ${m.note ? '· ' + m.note : ''}</div>
+            </div>
+            <strong class="${m.delta >= 0 ? 'text-brand-olive' : 'text-brand-crimson'}">${m.delta >= 0 ? '+' : ''}${fmt(m.delta)} kg</strong>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderCurrentView() {
+      if (state.activeTab === 'resumen') renderResumen();
+      if (state.activeTab === 'inventario') renderInventario();
+      if (state.activeTab === 'pedido') renderPedido();
+      if (state.activeTab === 'produccion') renderProduccion();
+      if (state.activeTab === 'historial') renderHistorial();
+    }
+
+    // =========================================================================
+    // ACTIONS & MODALS
+    // =========================================================================
+    function loadDemoStock() {
+      const sampleBags = {
+        'cc_performa_nt3': 4, 'bx_maxima_nt4': 10, 'maxima_nt_pro_25_40': 15, 'maxima_nt_40_60': 20,
+        'maxima_nt_60_95': 12, 'maxima_nt_profit_fin': 18, 'performa_nt_gestacion': 14,
+        'avantage_inicio_polla': 8, 'micro_crianza_polla': 12, 'avantage_booster': 10,
+        'avantage_fase2': 16, 'avantage_fase3': 12, 'avantage_pelecha2': 15,
+        'detoxa_plus': 5, 'detoxa_performance': 4, 'nutrimulina_ctc': 3, 'neumoenter': 4
+      };
+      state.products.forEach(p => {
+        p.bags = sampleBags[p.id] || 0;
+        p.looseKg = 0;
+      });
+      state.orderOverrides = {};
+      saveState();
+      renderCurrentView();
+      showToast('Ejemplo de inventario cargado');
+    }
+
+    function exportCsv(filename, headers, rows) {
+      const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function openReceiveModal(orderId) {
+      pendingReceiveOrderId = orderId;
+      document.getElementById('receiveModal').classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // INIT & EVENT LISTENERS
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      loadState();
+
+      document.querySelectorAll('.tab-btn, .mob-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      document.getElementById('invSearch').addEventListener('input', (e) => {
+        state.invSearch = e.target.value;
+        renderInventario();
+      });
+      document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.invAreaFilter = btn.dataset.area;
+          renderInventario();
+        });
+      });
+
+      document.getElementById('btnSaveMondayCount').addEventListener('click', () => {
+        const nowStr = new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+        const snap = createStockSnapshot(`Conteo Lunes S${state.weekNumber} (${new Date().toLocaleDateString('es-MX')})`);
+        state.mondaySnapshots = state.mondaySnapshots || [];
+        state.mondaySnapshots.unshift(snap);
+        if (state.mondaySnapshots.length > 12) state.mondaySnapshots = state.mondaySnapshots.slice(0, 12);
+        state.selectedSnapshotId = snap.id;
+        state.lastMondayCount = nowStr;
+        state.orderOverrides = {};
+        state.movements.unshift({
+          productName: 'Conteo General de Lunes',
+          type: 'Conteo Lunes',
+          delta: snap.totalKg,
+          date: nowStr,
+          note: `Semana ${state.weekNumber}`
+        });
+        saveState();
+        renderCurrentView();
+        showToast('Conteo de lunes guardado y registrado para comparativo');
+      });
+
+      document.getElementById('selectMondaySnapshot').addEventListener('change', (e) => {
+        state.selectedSnapshotId = e.target.value;
+        saveState();
+        renderInventario();
+      });
+
+      document.querySelectorAll('.sup-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.orderSupplier = btn.dataset.supplier;
+          saveState();
+          renderPedido();
+        });
+      });
+
+      document.querySelectorAll('.wk-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.targetWeeks = Number(btn.dataset.weeks);
+          state.orderOverrides = {};
+          saveState();
+          renderPedido();
+        });
+      });
+      document.getElementById('inputTargetWeeks').addEventListener('change', (e) => {
+        state.targetWeeks = Math.max(0.5, Number(e.target.value) || 1);
+        state.orderOverrides = {};
+        saveState();
+        renderPedido();
+      });
+      document.getElementById('inputOrderDate').addEventListener('change', (e) => {
+        if (!e.target.value) return;
+        state.orderDate = e.target.value;
+        state.deliveryDate = addDaysISO(state.orderDate, 7);
+        saveState();
+        renderPedido();
+      });
+      document.getElementById('inputDeliveryDate').addEventListener('change', (e) => {
+        if (!e.target.value) return;
+        state.deliveryDate = e.target.value;
+        saveState();
+      });
+      document.getElementById('chkRoundBags').addEventListener('change', (e) => {
+        state.roundBags = e.target.checked;
+        state.orderOverrides = {};
+        saveState();
+        renderPedido();
+      });
+      document.getElementById('chkOnlyShortage').addEventListener('change', (e) => {
+        state.onlyShortage = e.target.checked;
+        saveState();
+        renderPedido();
+      });
+
+      document.getElementById('selectConsumptionBasis').addEventListener('change', (e) => {
+        state.consumptionBasis = e.target.value;
+        state.orderOverrides = {};
+        saveState();
+        renderPedido();
+      });
+
+      document.getElementById('selectHistProduct').addEventListener('change', (e) => {
+        state.histFilter = e.target.value;
+        renderHistoricalAnalytics();
+      });
+
+      document.getElementById('btnExportHistCsv').addEventListener('click', () => {
+        const rows = state.products.map(p => {
+          const arr = HISTORICAL_CONSUMPTION[p.id] || new Array(12).fill(0);
+          const st = getHistStats(p.id);
+          return [p.supplierGroup, p.name, ...arr.map(v => v.toFixed(1)), st.avg4.toFixed(1), st.avg12.toFixed(1), st.max12.toFixed(1), st.total12.toFixed(1)];
+        });
+        exportCsv('historico_consumo_s36_s47.csv', ['Proveedor', 'Producto', ...HISTORICAL_WEEKS, 'Prom_4_Sem', 'Prom_12_Sem', 'Max_Sem', 'Total_12_Sem'], rows);
+      });
+
+      document.getElementById('btnOpenPO').addEventListener('click', openPurchaseOrderModal);
+      document.getElementById('btnClosePO').addEventListener('click', () => document.getElementById('poModal').classList.add('hidden'));
+      document.getElementById('btnPoPrint').addEventListener('click', () => window.print());
+      document.getElementById('btnPoCopyWa').addEventListener('click', () => {
+        const txt = buildWhatsAppText();
+        if (txt) copyTextFallback(txt);
+      });
+      document.getElementById('btnPoSave').addEventListener('click', () => {
+        saveCurrentOrder();
+        document.getElementById('poModal').classList.add('hidden');
+      });
+
+      document.getElementById('btnCopyWhatsApp').addEventListener('click', () => {
+        const txt = buildWhatsAppText();
+        if (!txt) return showToast('No hay faltantes para pedir');
+        copyTextFallback(txt);
+      });
+
+      document.getElementById('btnExportInvCsv').addEventListener('click', () => {
+        const weeklyMap = getWeeklyConsumptionMap();
+        const rows = state.products.map(p => {
+          const c = getOrderCalc(p, weeklyMap[p.id] || 0);
+          return [p.supplierGroup, p.code, p.name, p.bags, p.bagKg, p.looseKg, c.stockKg.toFixed(1), c.weeklyKg.toFixed(1), c.covWeeks.toFixed(2)];
+        });
+        exportCsv(`inventario_micros_s${state.weekNumber}.csv`, ['Proveedor', 'Codigo', 'Producto', 'Sacos', 'Presentacion_Kg', 'Kg_Sueltos', 'Existencia_Kg', 'Consumo_Sem_Kg', 'Cobertura_Sem'], rows);
+      });
+
+      document.getElementById('btnExportOrderCsv').addEventListener('click', () => {
+        const rows = getFilteredOrderItems().filter(x => x.c.finalKg > 0).map(({ p, c }) => [
+          getSupplierDisplayName(p.supplierGroup), p.code, p.name, p.bagKg, c.finalBags.toFixed(1), c.finalKg.toFixed(1), fmtDateDMY(state.orderDate), fmtDateDMY(state.deliveryDate)
+        ]);
+        exportCsv(`orden_${state.orderSupplier}_s${state.weekNumber}.csv`, ['Proveedor', 'Codigo', 'Ingrediente', 'Presentacion', 'Pedido_Sacos', 'KG', 'Fecha_Pedido', 'Posible_Llegada'], rows);
+      });
+
+      document.getElementById('inputWeekNum').addEventListener('change', (e) => {
+        state.weekNumber = Math.max(1, Math.min(53, Number(e.target.value) || 47));
+        saveState();
+        renderCurrentView();
+      });
+      document.getElementById('btnResetS47').addEventListener('click', () => {
+        state.weekNumber = 47;
+        state.diets = JSON.parse(JSON.stringify(DEFAULT_DIETS));
+        saveState();
+        renderProduccion();
+        showToast('Producción restaurada a Semana 47 (266.5 t)');
+      });
+
+      const movSel = document.getElementById('movProduct');
+      movSel.innerHTML = state.products.map(p => `<option value="${p.id}">${p.name} (${p.supplierGroup})</option>`).join('');
+
+      document.getElementById('btnOpenMovementModal').addEventListener('click', () => document.getElementById('movementModal').classList.remove('hidden'));
+      document.getElementById('btnCloseMovementModal').addEventListener('click', () => document.getElementById('movementModal').classList.add('hidden'));
+      document.getElementById('btnSubmitMovement').addEventListener('click', () => {
+        const pid = movSel.value;
+        const type = document.getElementById('movType').value;
+        const qty = Number(document.getElementById('movQty').value) || 0;
+        const note = document.getElementById('movNote').value.trim();
+        const p = state.products.find(x => x.id === pid);
+        if (!p || qty <= 0) return showToast('Ingresa una cantidad válida mayor a 0');
+
+        const curKg = getProductStockKg(p);
+        let newKg = curKg;
+        let delta = 0;
+        if (type === 'entrada') { newKg = curKg + qty; delta = qty; }
+        if (type === 'salida') { newKg = Math.max(0, curKg - qty); delta = newKg - curKg; }
+        if (type === 'ajuste') { newKg = qty; delta = qty - curKg; }
+
+        p.bags = Math.floor(newKg / p.bagKg);
+        p.looseKg = +(newKg % p.bagKg).toFixed(1);
+        state.movements.unshift({
+          productName: p.name,
+          type: type === 'entrada' ? 'Entrada' : (type === 'salida' ? 'Salida' : 'Ajuste'),
+          delta,
+          date: new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }),
+          note
+        });
+        saveState();
+        document.getElementById('movQty').value = '';
+        document.getElementById('movNote').value = '';
+        document.getElementById('movementModal').classList.add('hidden');
+        renderCurrentView();
+        showToast('Movimiento registrado');
+      });
+
+      document.getElementById('btnCancelReceive').addEventListener('click', () => {
+        pendingReceiveOrderId = null;
+        document.getElementById('receiveModal').classList.add('hidden');
+      });
+      document.getElementById('btnConfirmReceive').addEventListener('click', () => {
+        const ord = state.savedOrders.find(o => o.id === pendingReceiveOrderId);
+        if (ord && ord.status !== 'Recibido') {
+          ord.status = 'Recibido';
+          const nowStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+          ord.items.forEach(it => {
+            const p = state.products.find(x => x.id === it.id);
+            if (p) {
+              const totalKg = getProductStockKg(p) + it.kg;
+              p.bags = Math.floor(totalKg / p.bagKg);
+              p.looseKg = +(totalKg % p.bagKg).toFixed(1);
+              state.movements.unshift({
+                productName: p.name,
+                type: 'Entrada Orden',
+                delta: it.kg,
+                date: nowStr,
+                note: ord.folio
+              });
+            }
+          });
+          saveState();
+          showToast(`Orden ${ord.folio} sumada al inventario`);
+        }
+        pendingReceiveOrderId = null;
+        document.getElementById('receiveModal').classList.add('hidden');
+        renderCurrentView();
+      });
+
+      document.getElementById('btnExportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `respaldo_micros_s${state.weekNumber}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      document.getElementById('inputImportJson').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (imported.products && imported.diets) {
+              state = { ...state, ...imported };
+              saveState();
+              renderCurrentView();
+              showToast('Respaldo importado correctamente');
+            }
+          } catch (err) { showToast('Archivo JSON no válido'); }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btnCloseEditProduct').addEventListener('click', () => {
+        editingProductId = null;
+        document.getElementById('editProductModal').classList.add('hidden');
+      });
+      document.getElementById('btnSaveEditProduct').addEventListener('click', () => {
+        const p = state.products.find(x => x.id === editingProductId);
+        if (!p) return;
+        p.code = document.getElementById('editProdCode').value.trim() || '—';
+        p.name = document.getElementById('editProdName').value.trim() || p.name;
+        p.stageLabel = document.getElementById('editProdStage').value.trim();
+        p.colorTag = document.getElementById('editProdColor').value;
+        p.bagKg = Math.max(0.5, Number(document.getElementById('editProdBagKg').value) || p.bagKg);
+        saveState();
+        movSel.innerHTML = state.products.map(pr => `<option value="${pr.id}">${pr.name} (${pr.supplierGroup})</option>`).join('');
+        editingProductId = null;
+        document.getElementById('editProductModal').classList.add('hidden');
+        renderCurrentView();
+        showToast('Artículo actualizado');
+      });
+
+      document.getElementById('btnSaveCloudUrl').addEventListener('click', () => {
+        state.cloudSyncUrl = document.getElementById('inputCloudSyncUrl').value.trim();
+        saveState();
+        updateCloudStatusUI();
+        showToast(state.cloudSyncUrl ? 'URL de sincronización guardada' : 'URL eliminada');
+      });
+      document.getElementById('btnCopyAppsScript').addEventListener('click', () => {
+        copyTextFallback(APPS_SCRIPT_CODE);
+        showToast('Código Apps Script copiado al portapapeles');
+      });
+      updateCloudStatusUI();
+
+      switchTab(state.activeTab || 'resumen');
+    });
+  </script>
+</body>
+</html>
